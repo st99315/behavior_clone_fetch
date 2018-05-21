@@ -11,7 +11,7 @@ pip install -e '.[all]'
 ```
 
 ### Generation data
-* First need to [generate training data](./gen_data_scripts/README.md)
+* First need to [generate training data](./generation_data/README.md)
 
 ### Training NN
 ```bash
