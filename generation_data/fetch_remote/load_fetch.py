@@ -6,8 +6,12 @@
 import gym
 import numpy as np
 from matplotlib import pyplot as plt
-import fetch_remote.utils as utils
-from fetch_remote.utils.spacemouse_convert import Convert
+try:
+    import fetch_remote.utils as utils
+    from fetch_remote.utils.spacemouse_convert import Convert
+except ImportError:
+    import utils
+    from utils.spacemouse_convert import Convert
 
 
 args = utils.get_args()

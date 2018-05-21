@@ -2,18 +2,19 @@
 # Get 99% accuracy from tensorflow tutorial #
 
 import tensorflow as tf
-# from DNN import *
-import pickle
+from tensorflow.python.platform import flags
+
 import time
-from utils import print_all_var, save_train_batch, recreate_dir
+from os.path import join
 import imageio
 import numpy as np 
-from im_network_one_gif import BehaviorClone
+
+from utils import print_all_var, save_train_batch, recreate_dir
 from utils import get_recursive_file_name, show_use_time, get_files_in_dir
-from tensorflow.python.platform import flags
-from os.path import join
+
 from load_data import DataLoader
-import time
+from im_network_one_gif import BehaviorClone
+
 
 _TRAIN_DATA = '../train_data_same_color_0520/train_data/object_0'
 _VALID_DATA = '../train_data_same_color_0520/valid_data/object_0'
@@ -175,6 +176,7 @@ def valid_batch(*arg, **kwargs):
     return train_all_batch(*arg, **kwargs, training=False)
 
 
+# Data Loader
 train_dlr = DataLoader(_TRAIN_DATA)
 valid_dlr = DataLoader(_VALID_DATA)
 
@@ -189,7 +191,6 @@ m.build_inputs_and_outputs(tf.squeeze(gif), tf.squeeze(fdb), tf.squeeze(cmd))
 m.build_train_op()
 
 print('---------After build graph,  get_trainable_dic()------------')
-# print(get_trainable_dic())
 get_trainable_dic()
 
 # limit memory
@@ -199,8 +200,8 @@ get_trainable_dic()
 
 with tf.Session() as sess:
     start_ep = 0
-    #-------restore------#e 
-    # model_dir = 'checkpoints/'
+
+    # -------restore------
     recreate_dir(FLAGS.log_dir)
     model_file = tf.train.latest_checkpoint(FLAGS.model_dir)
     saver = tf.train.Saver(max_to_keep=5)
@@ -208,7 +209,6 @@ with tf.Session() as sess:
         print('Use model_file = ' + str(model_file) + '!' )
         saver.restore(sess, model_file)
         print('---------After build graph,  get_trainable_dic()------------')
-        # print(get_trainable_dic())
         get_trainable_dic()
         start_ep = int(model_file.rpartition('-')[-1]) + 1
     else:
@@ -221,7 +221,7 @@ with tf.Session() as sess:
         # sess.run(op, options=run_options)
         print('[I] Initialize all variables Finish')
 
-    # import time
+    # record start time
     train_start_time = time.time()
     
     try:

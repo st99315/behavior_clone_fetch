@@ -1,13 +1,20 @@
-import os
 import tensorflow as tf
-import numpy as np
-from im_network_one_gif import BehaviorClone
-import gym
-from gym.envs.robotics import FetchPickAndPlaceEnv, FetchPickAndPlaceJointEnv
-import fetch_remote.utils as frutils
+
+import os
 import glob
-from matplotlib import pyplot as plt
 import imageio
+import numpy as np
+from matplotlib import pyplot as plt
+
+import gym
+from gym.envs.robotics.fetch_env import goal_distance
+from gym.envs.robotics import FetchPickAndPlaceEnv, FetchPickAndPlaceJointEnv
+
+from im_network_one_gif import BehaviorClone
+try:
+    import fetch_remote.utils as frutils
+except ImportError:
+    import generation_data.fetch_remote.utils as frutils
 
 
 def load_valid(dir):
@@ -16,15 +23,18 @@ def load_valid(dir):
 
 
 DEMO_TIMES = 10
+MODEL_CKPT_DIR = 'checkpoints/'
+VALID_DATA_DIR = '../train_data_same_color_0520/valid_data/object_0/'
 
 GYM_PATH = gym.__path__[0]
 XML_PATH = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs/blotchy_0130_marbled_0170.xml')
 # XML_PATH = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs/perforated_0016_veined_0091.xml')
 
+
 args = frutils.get_args()
 frutils.set_env_variable(args.display)
 
-all_gifs = load_valid('../train_data_same_color_0520/valid_data/object_0/')
+all_gifs = load_valid(VALID_DATA_DIR)
 
 env = FetchPickAndPlaceEnv(xml_file=XML_PATH)
 # env = FetchPickAndPlaceJointEnv(xml_file=XML_PATH)
@@ -34,7 +44,7 @@ m.build_inputs_and_outputs()
 
 with tf.Session() as sess:
     # -------restore------#e 
-    log_dir = 'checkpoints/'
+    log_dir = MODEL_CKPT_DIR
 
     model_file = tf.train.latest_checkpoint(log_dir)
     if model_file is not None:
@@ -88,8 +98,6 @@ with tf.Session() as sess:
             # print(actions)
             obs, r, done, info = env.step(actions)
             total_reward += r
-
-
 
             if step % 10 == 0:
                 rgb_obs = env.sim.render(width=200, height=200, camera_name="external_camera_0", depth=False,

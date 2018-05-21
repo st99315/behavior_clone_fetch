@@ -1,14 +1,18 @@
-import os
 import tensorflow as tf
+
+import os
 import numpy as np
-from im_network_one_gif import BehaviorClone
-import gym
-from gym.envs.robotics import FetchPickAndPlaceEnv, FetchPickAndPlaceJointEnv
-import fetch_remote.utils as frutils
-import glob
 from matplotlib import pyplot as plt
-import imageio
+
+import gym
 from gym.envs.robotics.fetch_env import goal_distance
+from gym.envs.robotics import FetchPickAndPlaceEnv, FetchPickAndPlaceJointEnv
+
+from im_network_one_gif import BehaviorClone
+try:
+    import fetch_remote.utils as frutils
+except ImportError:
+    import generation_data.fetch_remote.utils as frutils
 
 
 CKPT_DIR = '0516_315_feedbackWithoutBias/checkpoints/'

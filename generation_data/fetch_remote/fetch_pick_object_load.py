@@ -7,9 +7,13 @@ import gym
 from gym.envs.robotics import FetchPickAndPlaceJointEnv
 import numpy as np
 from matplotlib import pyplot as plt
-import fetch_remote.utils as utils
-from fetch_remote.utils.spacemouse_convert import Convert
 import glob
+try:
+    import fetch_remote.utils as utils
+    from fetch_remote.utils.finite_state_machine import FSM
+except ImportError:
+    import utils
+    from utils.finite_state_machine import FSM
 
 
 GRIPPER_STATE = 1
@@ -19,12 +23,6 @@ DEMO_TIMES = 10
 GYM_PATH = gym.__path__[0]
 XML_PATH = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs/banded_0002_lacelike_0121.xml')
 CVS_PATH = '/home/iclab/youjun/remote/data/object_0/301.csv'
-
-
-def get_all_xml():
-    all_xmls = glob.glob(os.path.join(XML_DIR, '*.xml'))
-    print('envs', len(all_xmls))
-    return all_xmls
 
 
 def get_joint_data():

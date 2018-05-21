@@ -9,9 +9,14 @@ import gym
 from gym.envs.robotics import FetchPickAndPlaceEnv
 import numpy as np
 from matplotlib import pyplot as plt
-import fetch_remote.utils as utils
-from fetch_remote.utils.data_save import DataSaver
-from fetch_remote.utils.finite_state_machine import FSM
+try:
+    import fetch_remote.utils as utils
+    from fetch_remote.utils.data_save import DataSaver
+    from fetch_remote.utils.finite_state_machine import FSM
+except ImportError:
+    import utils
+    from utils.data_save import DataSaver
+    from utils.finite_state_machine import FSM
 
 
 GRIPPER_STATE = 1
