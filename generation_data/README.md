@@ -8,10 +8,10 @@
 ## Maybe Need
 * Install fetch_remote module
 ```
-python setup.py -e .
+pip install -e .
 ```
 
-* This appoarch request install fetch_remote to pip
+### This appoarch request install fetch_remote to pip
 * -si: start of index, -ei: end of index, -r: random texture and light, -dir: saving directory
 ```
 python -m fetch_remote.fetch_pick_object_data -si 0 -ei 100 -r True -s True -dir $SOMEWHERE
