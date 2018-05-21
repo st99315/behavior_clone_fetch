@@ -11,7 +11,7 @@ pip install -e '.[all]'
 ```
 
 ### Generation data
-* First need to generate training data
+* First need to [generate training data](./gen_data_scripts/README.md)
 
 ### Training NN
 ```bash
@@ -22,4 +22,3 @@ python train_im_move_behavior_clone.py
 ```bash
 python test_im_move_behavior_clone.py
 ```
-
