@@ -1,0 +1,14 @@
+*.pyc
+
+*.gif
+*.csv
+
+*.log
+MUJOCO_LOG.TXT
+
+events.out.tfevents*
+checkpoint
+*.data-00000-of-00001
+*.index
+*.meta
+
