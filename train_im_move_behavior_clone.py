@@ -14,10 +14,11 @@ from utils import get_recursive_file_name, show_use_time, get_files_in_dir
 
 from load_data import DataLoader
 from im_network_one_gif import BehaviorClone
+from config import cfg
 
 
-_TRAIN_DATA = '../train_data_same_color_0520/train_data/object_0'
-_VALID_DATA = '../train_data_same_color_0520/valid_data/object_0'
+_TRAIN_DATA = '../train_data_diff_color_0522/train_data/object_0'
+_VALID_DATA = '../train_data_diff_color_0522/valid_data/object_0'
 _EPOCHS = 1000
 _PRINT_STEP = 100
 
@@ -177,8 +178,8 @@ def valid_batch(*arg, **kwargs):
 
 
 # Data Loader
-train_dlr = DataLoader(_TRAIN_DATA)
-valid_dlr = DataLoader(_VALID_DATA)
+train_dlr = DataLoader(_TRAIN_DATA, img_size=cfg['image_height'])
+valid_dlr = DataLoader(_VALID_DATA, img_size=cfg['image_height'])
 
 train_data = train_dlr.input_pipeline()
 valid_data = valid_dlr.input_pipeline()
