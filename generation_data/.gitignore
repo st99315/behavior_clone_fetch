@@ -1,0 +1,7 @@
+*.pyc
+
+*.gif
+*.csv
+
+*.log
+MUJOCO_LOG.TXT
