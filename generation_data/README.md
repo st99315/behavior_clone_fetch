@@ -14,11 +14,11 @@ pip install -e .
 ```
 
 ### This appoarch request install fetch_remote to pip
-* -si : start of index
-* -ei : end of index
-* -r  : random texture and light
-* -dir: saving directory
 ```
 python -m fetch_remote.fetch_pick_object_data -si 0 -ei 100 -r True -s True -dir $SOMEWHERE
 ```
-
+* -si : type int,  start of index.
+* -ei : type int,  end of index.
+* -r  : type bool, random texture and light.
+* -s  : type bool, saving.
+* -dir: type str,  saving directory.
