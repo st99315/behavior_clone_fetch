@@ -3,6 +3,7 @@ import sys
 import collections
 cfg = []
 
+
 """ For loader tuple"""
 class YAMLPatch(yaml.SafeLoader):
     def construct_python_tuple(self, node):
@@ -23,6 +24,7 @@ def dict_representer(dumper, data):
 def dict_constructor(loader, node):
     return collections.OrderedDict(loader.construct_pairs(node))
 
+
 yaml.add_representer(collections.OrderedDict, dict_representer)
 yaml.add_constructor(_mapping_tag, dict_constructor)
 
@@ -42,5 +44,4 @@ def load_config(f_name = "config/im_network.yaml"):
 if len(sys.argv) >= 2 and sys.argv[1].endswith('.yaml'):
     load_config(sys.argv[1])
 else:
-    # load_config()
-    load_config("config/im_network.yaml")
+    load_config()

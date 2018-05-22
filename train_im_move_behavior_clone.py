@@ -148,7 +148,7 @@ def train_all_batch(sess, model, epoch, datanums, name, training=True):
 
         except tf.errors.OutOfRangeError:
             print('BatchOutOfRange')
-            break
+            exit()
         
         im_loss_sum += total_im_loss
         im_loss_avg = im_loss_sum / i
@@ -178,8 +178,8 @@ def valid_batch(*arg, **kwargs):
 
 
 # Data Loader
-train_dlr = DataLoader(_TRAIN_DATA, img_size=cfg['image_height'])
-valid_dlr = DataLoader(_VALID_DATA, img_size=cfg['image_height'])
+train_dlr = DataLoader(_TRAIN_DATA, img_size=cfg['image_height'], load_num=20000)
+valid_dlr = DataLoader(_VALID_DATA, img_size=cfg['image_height'], load_num=2000)
 
 train_data = train_dlr.input_pipeline()
 valid_data = valid_dlr.input_pipeline()

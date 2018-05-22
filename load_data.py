@@ -1,6 +1,8 @@
 """
     Using TF Queue to Load Training Data
         - Volatile GPU-Util become 2x
+
+    Modify from https://github.com/tianheyu927/mil
 """
 
 import os
@@ -15,12 +17,12 @@ class DataLoader:
     _NUM_THREAD = 1
     _coord, _threads = None, None
 
-    def __init__(self, directory, img_size=200, csv_cols=15):
+    def __init__(self, directory, img_size=200, csv_cols=15, load_num=None):
         self._GIF_SHAPE = (None, img_size, img_size, 3)
         self._CSV_COLS  = csv_cols
 
         self.coord = None
-        all_gifs, all_csvs = self.get_all_filenames(directory, shuffle=True)
+        all_gifs, all_csvs = self.get_all_filenames(directory, shuffle=True, size=load_num)
         self.data_num = len(all_gifs)
         print('all data:', self.data_num)
         assert self.data_num is not 0, 'No data loaded!'
@@ -44,8 +46,9 @@ class DataLoader:
         image.set_shape(self._GIF_SHAPE)
         image = tf.cast(image, tf.float32)
         # normalize
+        # image -= tf.convert_to_tensor([116.779, 103.939, 123.68])
+        image -= tf.convert_to_tensor([123.68, 103.939, 116.779])
         image /= 255.
-        # image -= tf.convert_to_tensor([103.939, 116.779, 123.68])
         return image
 
     def _read_gif_format(self, filename_queue):

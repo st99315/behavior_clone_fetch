@@ -13,9 +13,10 @@ try:
     import fetch_remote.utils as frutils
 except ImportError:
     import generation_data.fetch_remote.utils as frutils
+from config import cfg
 
 
-CKPT_DIR = '0516_315_feedbackWithoutBias/checkpoints/'
+CKPT_DIR = 'checkpoints/'
 DEMO_TIMES = 10
 
 GYM_PATH = gym.__path__[0]
@@ -47,7 +48,7 @@ with tf.Session() as sess:
     upper_sucess = 0
     grasp_sucess = 0
     for i in range(1000):
-        obs = env.reset(rand_text=True, rand_shadow=True)
+        obs = env.reset()
         total_reward = 0
         upper = 0
         grasp = 0
@@ -57,7 +58,7 @@ with tf.Session() as sess:
             if args.display:
                 env.render()
             else:
-                rgb_obs = env.sim.render(width=128, height=128, camera_name="external_camera_0", depth=False,
+                rgb_obs = env.sim.render(width=cfg['width'], height=cfg['height'], camera_name="external_camera_0", depth=False,
                     mode='offscreen', device_id=-1)
             
             traject = np.append(obs['eeinfo'][0], obs['weneed'])
@@ -66,12 +67,12 @@ with tf.Session() as sess:
             traject = traject[np.newaxis, :]
 
             rgb_obs = np.array(rgb_obs, dtype=np.float32)
+            rgb_obs -= np.array([123.68, 103.939, 116.779])
             rgb_obs /= 255.
-            # rgb_obs -= np.array([103.939, 116.779, 123.68])
 
-            # if step % 10 == 0:
-            #     plt.figure(2)
-            #     plt.imshow(rgb_obs/255.)
+            if step % 10 == 0:
+                plt.figure(2)
+                plt.imshow(rgb_obs)
 
             rgb_obs = rgb_obs[np.newaxis, :]
             predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_obs, m.batch_feedback: traject})

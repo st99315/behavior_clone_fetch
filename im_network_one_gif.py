@@ -140,17 +140,6 @@ class BehaviorClone(object):
         if self.drop_out: fc2 = tf.nn.dropout(fc2, 0.5)
 
         im_prediction = FC(fc2, self.outs, name_prefix='im_prediction', op='none')
-        
-        # print('flat ->', flat)
-        # print('fc1 -> ', fc1)
-        # print('fc2 -> ', fc2)
-        # print('im_prediction -> ', im_prediction)
-        
-        # im_dis = euclidean(im_prediction, gif_actions)
-        # im_loss = tf.reduce_mean(im_dis)
-        
-        # fn_output = [im_prediction, im_loss]
-        # return [im_prediction, im_loss]
         return im_prediction
 
     def build_prediction(self, in_elems):
@@ -209,52 +198,3 @@ class BehaviorClone(object):
 
     def set_network_property(self, drop_out=False):
         self.drop_out = drop_out
-
-    def make_gif_batch(self, all_filenames): #, train=True):
-        ''' Modify from https://github.com/tianheyu927/mil '''
-        # TEST_INTERVAL = 500
-        batch_image_size = self.batch_size  # TODO: be im & mimic
-
-        # if train:
-        #     all_filenames = self.all_training_filenames
-        #     if restore_iter > 0:
-        #         all_filenames = all_filenames[batch_image_size*(restore_iter+1):]
-        # else:
-        #     all_filenames = self.all_val_filenames
-        #     if restore_iter > 0:
-        #         all_filenames = all_filenames[batch_image_size*(int(restore_iter/TEST_INTERVAL)+1):]
-        print('START----------make_batch_tensor-----------')
-        # print('make_batch_tensor say: all_filenames ={}')
-        
-        # make queue for tensorflow to read from
-        filename_queue = tf.train.string_input_producer(tf.convert_to_tensor(all_filenames), shuffle=False)
-        # print 'Generating image processing ops'
-        image_reader = tf.WholeFileReader()
-        _, image_file = image_reader.read(filename_queue)
-        image = tf.image.decode_gif(image_file)
-        # should be T x C x W x H
-        image.set_shape((self.pic_num_each_gif, self.img_h, self.img_w, self.img_d))
-        image = tf.cast(image, tf.float32)
-        image /= 255.0
-        # image = tf.transpose(image, perm=[0, 3, 2, 1]) # transpose to mujoco setting for images
-        image = tf.reshape(image, [self.pic_num_each_gif, -1])
-        min_queue_examples = 64 #128 #256
-        print('[I] Batching images')
-        images = tf.train.batch(
-                [image],
-                batch_size = batch_image_size,  # 2(update_batch+test_batch) * 5 (meta)
-                num_threads= 1,
-                capacity=min_queue_examples + 3 * batch_image_size,
-                )
-        all_images = []
-
-        for i in range(self.batch_size):
-            image = images[i:(i+1)]
-            # from before make_batch_tensor say: update_batch_size=1, test_batch_size=1
-            # print('\t image before reshape = ' , image.shape)
-            image = tf.reshape(image, [1*self.pic_num_each_gif, -1])
-            # print('\t image after reshape = ' , image.shape)
-            all_images.append(image)
-        print('all_images', all_images)
-        print('END----------make_batch_tensor-----------')
-        return tf.stack(all_images, name='make_gif_batch')
