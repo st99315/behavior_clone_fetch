@@ -31,5 +31,5 @@ network:
         size: 200
     im_prediction:
         type: 'fc'
-        size: 4
+        size: 10
     

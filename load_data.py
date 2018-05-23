@@ -72,9 +72,8 @@ class DataLoader:
         features = tf.transpose(features, [1, 0])
         # slice features to feedback and command
         fdb = features[..., :14]
-        cmd = features[..., 14:18]
-        aux = features[..., 18:]
-        return key, fdb, cmd, aux
+        cmd = features[..., 14:]
+        return key, fdb, cmd
 
     def input_pipeline(self, batch_size=1, num_epochs=None):
         min_after_dequeue = 16

@@ -115,7 +115,8 @@ class BehaviorClone(object):
         # conv3 = Conv2D(conv2, 3, 64, name_prefix='im_conv_3')
         # conv4 = Conv2D(conv3, 3, 128, name_prefix='im_conv_4')
 
-        flat  = Flaten(conv3)
+        softmax = tf.contrib.layers.spatial_softmax(conv3, name='spatial_softmax')
+        flat  = Flaten(softmax)
         fc_input = tf.concat([flat, self.batch_feedback], axis=1)
 
         print('before contact, im_flat', fc_input)
