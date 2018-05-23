@@ -1,9 +1,9 @@
 batch_size: 5
-image_width: 160
-image_height: 160
+image_width: 128
+image_height: 128
 image_depth: 3
 pic_num_each_gif:
-robot_configuration_num: 11
+robot_configuration_num: 14
 
 network: 
     im_conv_1: 

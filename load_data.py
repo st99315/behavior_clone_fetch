@@ -17,7 +17,7 @@ class DataLoader:
     _NUM_THREAD = 1
     _coord, _threads = None, None
 
-    def __init__(self, directory, img_size=200, csv_cols=15, load_num=None):
+    def __init__(self, directory, img_size=128, csv_cols=24, load_num=None):
         self._GIF_SHAPE = (None, img_size, img_size, 3)
         self._CSV_COLS  = csv_cols
 
@@ -47,8 +47,12 @@ class DataLoader:
         image = tf.cast(image, tf.float32)
         # normalize
         # image -= tf.convert_to_tensor([116.779, 103.939, 123.68])
-        image -= tf.convert_to_tensor([123.68, 103.939, 116.779])
-        image /= 255.
+        # image -= tf.convert_to_tensor([123.68, 103.939, 116.779])
+        # image /= 255.
+
+        # Subtract off the mean and divide by the variance of the pixels.
+        image = tf.image.per_image_standardization(image)
+
         return image
 
     def _read_gif_format(self, filename_queue):
@@ -67,9 +71,10 @@ class DataLoader:
         # transpose tensor
         features = tf.transpose(features, [1, 0])
         # slice features to feedback and command
-        fdb = features[..., :11]
-        cmd = features[..., 11:]
-        return key, fdb, cmd
+        fdb = features[..., :14]
+        cmd = features[..., 14:18]
+        aux = features[..., 18:]
+        return key, fdb, cmd, aux
 
     def input_pipeline(self, batch_size=1, num_epochs=None):
         min_after_dequeue = 16
