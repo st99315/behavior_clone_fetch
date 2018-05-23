@@ -8,15 +8,19 @@ import numpy as np
 
 
 def check_dir(dir):
-    if not os.path.exists(dir):
+    if os.path.exists(dir): return
+    try:
         os.makedirs(dir)
+    except FileExistsError:
+        print('File existed! No Create Folder.')
 
 
 class DataSaver:
     _INFO_HEADER    = 'Object(X, Y, Z), Gosl(X, Y, Z)'
     _TRAJECT_HEADER = (
-        'Feedback: EE(X, Y, Z), Joint(0, 1, 2, 3, 4, 5, 6), GripperState, ' +
-        'Command: EE velocity (X, Y, Z), GripperCommand')
+        'Feedback: EE(X, Y, Z), Joint(0, 1, 2, 3, 4, 5, 6), PastCommand(X, Y, Z, G), ' +
+        'Command: EE velocity (X, Y, Z), GripperCommand' +
+        'Auxiliary: Object(X, Y, Z), EE(X, Y, Z)')
 
     def __init__(self, directory, info=False):
         self.dir = directory

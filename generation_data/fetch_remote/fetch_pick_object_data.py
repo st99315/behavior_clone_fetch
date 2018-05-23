@@ -23,7 +23,7 @@ GRIPPER_STATE = 1
 LIMIT_Z = .415
 SCALE_SPEED = 2.0
 # desired image size
-IMG_SIZE = 160
+IMG_SIZE = 128
 GYM_PATH = gym.__path__[0]
 XML_DIR = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs')
 
@@ -47,10 +47,12 @@ for noenv, env_name in enumerate(env_xmls):
         simple_policy = FSM(np.append(obs['eeinfo'][0], g), obs['achieved_goal'], obs['desired_goal'], LIMIT_Z)
         total_reward = 0
 
+        a = np.array([0., 0., 0., 1.])
         while not simple_policy.done:
             # appending current feedback: ee pos (x, y, z), all of robot joints angle and gripper state
             trajectory = np.append(obs['eeinfo'][0], obs['weneed'])
-            trajectory = np.append(trajectory, obs['gripper_dense'])
+            # trajectory = np.append(trajectory, obs['gripper_state'])
+            trajectory = np.append(trajectory, a)
 
             x, y, z, g = simple_policy.execute()
             # scale up action
@@ -62,6 +64,10 @@ for noenv, env_name in enumerate(env_xmls):
             # appending control command: delta ee pos (x, y, z), gripper state
             trajectory = np.append(trajectory, a)
             total_reward += r
+
+            # appending auxiliary: object and gripper pos
+            trajectory = np.append(trajectory, obs['achieved_goal'])
+            trajectory = np.append(trajectory, obs['eeinfo'][0])
 
             if args.display:
                 env.render()

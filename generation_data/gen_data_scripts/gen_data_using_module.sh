@@ -24,8 +24,7 @@ do
     # this appoarch request install fetch_remote to pip
     # -si: start of index, -ei: end of index, -r: random texture and light, -dir: saving directory
     python -m fetch_remote.fetch_pick_object_data -si $s -ei $e -r True -s True -dir ../$DIRECTORY_SET/train_data > $DIRECTORY/gen_$s_$e.log 2>&1 &
-    sleep .1
-    
+
     # try following in ssh or docker
     #xvfb-run -a -s "-screen 0 1400x900x24"  python3 gen_move_train_data.py -s $s -e $e > $DIRECTORY/g$s_$e.log 2>&1 &
 done
