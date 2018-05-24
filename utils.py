@@ -200,9 +200,8 @@ def set_logger(filename='training.log', log_dir='./log'):
     # add the handler to the root logger
     logging.getLogger('').addHandler(console)
 
-    logging.info('Start Logging')
     # Now, define a couple of other loggers which might represent areas in your
     # application:
     logger1 = logging.getLogger('build_net')
     logger2 = logging.getLogger('training')
-    return logger1, logger2
+    return logging, logger1, logger2

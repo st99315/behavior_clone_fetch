@@ -14,6 +14,7 @@ from im_network_one_gif import BehaviorClone
 from utils import print_all_var, recreate_dir
 from utils import set_logger, show_use_time
 
+
 _DATASET_DIR = './generation_data/train_data_diff_color_0523/'
 _TRAIN_DATA = _DATASET_DIR + 'train_data/object_0'
 _VALID_DATA = _DATASET_DIR + 'valid_data/object_0'
@@ -27,7 +28,7 @@ flags.DEFINE_string('log_dir', 'log/', 'log directory')
 flags.DEFINE_string('model_dir', 'checkpoints/', 'model directory')
 
 # get logger
-build_logger, train_logger = set_logger(log_dir='logging_log')
+logger, build_logger, train_logger = set_logger(log_dir='logging_log')
 summary_writer = tf.summary.FileWriter(FLAGS.log_dir)
 
 
@@ -110,6 +111,7 @@ def valid_batch(*arg, **kwargs):
     return train_all_batch(*arg, **kwargs, training=False)
 
 
+logger.info('Start Logging')
 # Data Loader
 DataLoader.set_logger(build_logger)
 train_dlr = DataLoader(_TRAIN_DATA, img_size=cfg['image_height'])
@@ -200,5 +202,5 @@ with tf.Session() as sess:
         train_logger.info('Got Keyboard Interrupt!')
     finally:
         DataLoader.close()
-        train_logger.info('Stop the Training')
+        logger.info('Stop Training and Logging')
         # print('close')
