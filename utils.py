@@ -48,7 +48,6 @@ def print_all_var():
 def create_dir_not_exist(tar_dir):
     import os
     if not os.path.isdir(tar_dir):
-
         os.mkdir(tar_dir)
         print('create directory -> ' + tar_dir)
 
@@ -159,7 +158,51 @@ def get_recursive_file_name(root_path='train_data/', suffix='.gif',start = 0, en
     # print('no. all files : '+ str( len(all_files)  ))
 
 
-def show_use_time(total_time, head_str='Use time:'):
+def show_use_time(total_time, head_str='Use time:', logger=None):
     h, m, s = int(total_time // 3600), int(total_time // 60 % 60), int(total_time % 60)
-    print('{} {:0>3d}h{:0>2d}m{:0>2d}s'.format(head_str, h, m, s))
+    if logger:
+        logger.info('{} {:0>3d}h{:0>2d}m{:0>2d}s'.format(head_str, h, m, s))
+    else:
+        print('{} {:0>3d}h{:0>2d}m{:0>2d}s'.format(head_str, h, m, s))
     
+
+def set_logger(filename='training.log', log_dir='./log'):
+    ''' Logging Levels
+        CRITICAL 50
+        ERROR    40
+        WARNING  30
+        INFO     20
+        DEBUG    10
+        NOTSET	 0
+    '''
+    import os
+    import logging
+
+    create_dir_not_exist(log_dir)
+
+    # set up logging to file - see previous section for more details
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(name)-10s %(levelname)-7s %(message)s',
+                        datefmt='%m-%d %H:%M',
+                        filename=os.path.join(log_dir, filename),
+                        filemode='w')
+
+    # define a Handler which writes INFO messages or higher to the sys.stderr
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+
+    # set a format which is simpler for console use
+    formatter = logging.Formatter('%(name)-10s: %(levelname)-7s %(message)s')
+
+    # tell the handler to use this format
+    console.setFormatter(formatter)
+
+    # add the handler to the root logger
+    logging.getLogger('').addHandler(console)
+
+    logging.info('Start Logging')
+    # Now, define a couple of other loggers which might represent areas in your
+    # application:
+    logger1 = logging.getLogger('build_net')
+    logger2 = logging.getLogger('training')
+    return logger1, logger2

@@ -12,10 +12,11 @@ import random
 
 
 class DataLoader:
+    """ Need Set Logger """
     _MAX_LEN = 300
     _HEAD_LINE = 1
     _NUM_THREAD = 1
-    _coord, _threads = None, None
+    _coord, _threads, _logger = None, None, None
 
     def __init__(self, directory, img_size=128, csv_cols=24, load_num=None):
         self._GIF_SHAPE = (None, img_size, img_size, 3)
@@ -24,9 +25,12 @@ class DataLoader:
         self.coord = None
         all_gifs, all_csvs = self.get_all_filenames(directory, shuffle=True, size=load_num)
         self.data_num = len(all_gifs)
-        print('all data:', self.data_num)
-        assert self.data_num is not 0, 'No data loaded!'
 
+        DataLoader._logger.info('All data: {}'.format(self.data_num))
+        assert self.data_num is not 0, DataLoader._logger.error('No data loaded!')
+        # print('all data:', self.data_num)
+        # assert self.data_num is not 0, 'No data loaded!'
+        
         self.gif_names = tf.convert_to_tensor(all_gifs)
         self.csv_names = tf.convert_to_tensor(all_csvs)
 
@@ -98,6 +102,10 @@ class DataLoader:
         return image_batch, fdb_batch, cmd_batch, names
 
     @staticmethod
+    def set_logger(logger):
+        DataLoader._logger = logger
+
+    @staticmethod
     def start(sess):
         if DataLoader._coord is not None: return
         # Required to get the filename matching to run.
@@ -105,7 +113,7 @@ class DataLoader:
         # Coordinate the loading of image files.
         DataLoader._coord   = tf.train.Coordinator()
         DataLoader._threads = tf.train.start_queue_runners(sess=sess, coord=DataLoader._coord, start=True)
-        print('[i] start loader')
+        DataLoader._logger.info('Start loader')
 
     @staticmethod
     def close():
@@ -114,7 +122,7 @@ class DataLoader:
         DataLoader._coord.request_stop()
         DataLoader._coord.join(DataLoader._threads)
         DataLoader._coord, DataLoader._threads = None, None
-        print('[i] close loader')
+        DataLoader._logger.info('Close loader')
 
     @staticmethod
     def should_stop():
