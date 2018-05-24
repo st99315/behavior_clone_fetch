@@ -1,7 +1,7 @@
-# Behavior Clone Fetch
+# Behavior Clone Fetch :metal:
 
-* All scripts are run on Python3
-* Python2 not tried
+- [x] All scripts are run on Python3
+- [ ] Python2 not tried
 
 ## Request OpenAI GYM
 
