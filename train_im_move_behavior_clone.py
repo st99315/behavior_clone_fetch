@@ -68,7 +68,7 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
 
                 if i==1:
                     for line in predict:
-                        print(line)
+                        print('pred cmd:', line[:4], 'obj:', line[4:7], 'grip:', line[7:])
 
         except tf.errors.OutOfRangeError:
             print('BatchOutOfRange')
