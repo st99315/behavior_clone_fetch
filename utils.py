@@ -192,7 +192,7 @@ def set_logger(filename='training.log', log_dir='./log'):
     console.setLevel(logging.INFO)
 
     # set a format which is simpler for console use
-    formatter = logging.Formatter('%(name)-10s: %(levelname)-7s %(message)s')
+    formatter = logging.Formatter('%(levelname)-7s %(message)s')
 
     # tell the handler to use this format
     console.setFormatter(formatter)
@@ -202,6 +202,6 @@ def set_logger(filename='training.log', log_dir='./log'):
 
     # Now, define a couple of other loggers which might represent areas in your
     # application:
-    logger1 = logging.getLogger('build_net')
-    logger2 = logging.getLogger('training')
+    logger1 = logging.getLogger('build_step')
+    logger2 = logging.getLogger('train_step')
     return logging, logger1, logger2
