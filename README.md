@@ -32,7 +32,7 @@ python test_im_move_behavior_clone.py
 pip3 install -U virtualenv
 ```
 
-2. Create new virtual enviroment using Python3
+2. Create new virtual enviroment with Python3 interpreter
 ```bash
 virtualenv -p python3 envname
 ```
