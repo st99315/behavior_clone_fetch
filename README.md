@@ -13,6 +13,7 @@ git checkout imitation_fetch
 pip install -e '.[all]'
 ```
 
+## How to Use
 ### Generation data
 * First need to [generate training data](./generation_data/README.md)
 
