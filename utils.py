@@ -182,7 +182,7 @@ def set_logger(filename='training.log', log_dir='./log'):
 
     # set up logging to file - see previous section for more details
     logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s %(name)-10s %(levelname)-7s %(message)s',
+                        format='%(asctime)s %(name)-10s [%(levelname)-7s] %(message)s',
                         datefmt='%m-%d %H:%M',
                         filename=os.path.join(log_dir, filename),
                         filemode='w')
@@ -192,7 +192,7 @@ def set_logger(filename='training.log', log_dir='./log'):
     console.setLevel(logging.INFO)
 
     # set a format which is simpler for console use
-    formatter = logging.Formatter('%(levelname)-7s %(message)s')
+    formatter = logging.Formatter('[%(levelname)-7s] %(message)s')
 
     # tell the handler to use this format
     console.setFormatter(formatter)

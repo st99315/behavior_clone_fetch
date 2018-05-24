@@ -10,10 +10,11 @@ chmod +x gen_data_diff_color.sh
 ## Maybe Need
 * Install fetch_remote module
 ```
+# in generation_data directory
 pip install -e .
 ```
 
-### This appoarch request install fetch_remote to pip
+### This appoarch request install fetch_remote module
 ```
 python -m fetch_remote.fetch_pick_object_data -si 0 -ei 100 -r True -s True -dir $SOMEWHERE
 ```
