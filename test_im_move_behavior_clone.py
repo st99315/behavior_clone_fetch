@@ -53,16 +53,18 @@ with tf.Session() as sess:
         upper = 0
         grasp = 0
 
+        actions = np.array([0., 0., 0., 1.])
         for step in range(500):
 
             if args.display:
                 env.render()
             else:
-                rgb_obs = env.sim.render(width=cfg['width'], height=cfg['height'], camera_name="external_camera_0", depth=False,
+                rgb_obs = env.sim.render(width=cfg['image_width'], height=cfg['image_height'], camera_name="external_camera_0", depth=False,
                     mode='offscreen', device_id=-1)
             
             traject = np.append(obs['eeinfo'][0], obs['weneed'])
-            traject = np.append(traject, obs['gripper_state'])
+            traject = np.append(traject, actions)
+            # traject = np.append(traject, obs['gripper_state'])
             # print('T:', traject)
             traject = traject[np.newaxis, :]
 
@@ -70,20 +72,23 @@ with tf.Session() as sess:
             rgb_obs -= np.array([123.68, 103.939, 116.779])
             rgb_obs /= 255.
 
-            if step % 10 == 0:
-                plt.figure(2)
-                plt.imshow(rgb_obs)
+            # if step % 10 == 0:
+            #     plt.figure(2)
+            #     plt.imshow(rgb_obs)
 
             rgb_obs = rgb_obs[np.newaxis, :]
             predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_obs, m.batch_feedback: traject})
             
             predict = np.squeeze(predict)
-            actions = np.append(predict[:3], predict[-1])
-            # print('A:', actions)
+            actions = np.append(predict[:3], predict[3:4])
+            
             obs, r, done, info = env.step(actions)
             total_reward += r
 
             if step % 20 == 0:
+                print('object:', predict[4:7], obs['achieved_goal'])
+                print('gripper:', predict[7:], obs['eeinfo'][0])
+
                 rgb_obs = env.sim.render(width=200, height=200, camera_name="external_camera_0", depth=False,
                     mode='offscreen', device_id=-1)
                 # rgb_obs1 = env.sim.render(width=200, height=200, camera_name="external_camera_1", depth=False,

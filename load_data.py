@@ -47,11 +47,11 @@ class DataLoader:
         image = tf.cast(image, tf.float32)
         # normalize
         # image -= tf.convert_to_tensor([116.779, 103.939, 123.68])
-        # image -= tf.convert_to_tensor([123.68, 103.939, 116.779])
-        # image /= 255.
+        image -= tf.convert_to_tensor([123.68, 103.939, 116.779])
+        image /= 255.
 
         # Subtract off the mean and divide by the variance of the pixels.
-        image = tf.image.per_image_standardization(image)
+        # image = tf.image.per_image_standardization(image)
 
         return image
 

@@ -17,8 +17,9 @@ from im_network_one_gif import BehaviorClone
 from config import cfg
 
 
-_TRAIN_DATA = '../train_data_diff_color_0522/train_data/object_0'
-_VALID_DATA = '../train_data_diff_color_0522/valid_data/object_0'
+_DATASET_DIR = './generation_data/train_data_diff_color_0523/'
+_TRAIN_DATA = _DATASET_DIR + 'train_data/object_0'
+_VALID_DATA = _DATASET_DIR + 'valid_data/object_0'
 _EPOCHS = 1000
 _PRINT_STEP = 100
 
@@ -144,7 +145,8 @@ def train_all_batch(sess, model, epoch, datanums, name, training=True):
                     feed_dict={is_training: training}) 
 
                 if i==1:
-                    print(predict)
+                    for line in predict:
+                        print(line)
 
         except tf.errors.OutOfRangeError:
             print('BatchOutOfRange')
@@ -178,8 +180,8 @@ def valid_batch(*arg, **kwargs):
 
 
 # Data Loader
-train_dlr = DataLoader(_TRAIN_DATA, img_size=cfg['image_height'], load_num=20000)
-valid_dlr = DataLoader(_VALID_DATA, img_size=cfg['image_height'], load_num=2000)
+train_dlr = DataLoader(_TRAIN_DATA, img_size=cfg['image_height'])
+valid_dlr = DataLoader(_VALID_DATA, img_size=cfg['image_height'])
 
 train_data = train_dlr.input_pipeline()
 valid_data = valid_dlr.input_pipeline()

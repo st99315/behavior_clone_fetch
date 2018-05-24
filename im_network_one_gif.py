@@ -4,15 +4,16 @@ from config import cfg
 import math
 
 
-def euclidean(x,y, multi=100.0):
+def euclidean(x, y, multi=100.0):
     """
       x:      [0,0],[1,1],[2,2]
       y:      [3,4 ],[7,9],[5,5]
       output: [  5.         10.          4.2426405]
     """
     multiplier = tf.constant(multi, dtype='float') #for bc #10000
-    sub =x*multiplier-y*multiplier
+    sub = x * multiplier - y * multiplier
     
+    # mean square error with multiplier
     return tf.reduce_mean(tf.square(sub))
     # return tf.sqrt(tf.reduce_sum(tf.square(x-y),1))
 
@@ -46,7 +47,6 @@ class BehaviorClone(object):
             # self.saver = tf.train.Saver()
 
     def build_weight(self):
-        
         # because yaml load cannot load by order, use sorted to sort it,
         # very tricky, becarefully
         sort_net_key = sorted(cfg['network'])  
@@ -68,7 +68,10 @@ class BehaviorClone(object):
                 fc_down_factor = fc_down_factor * int(com['stride']) if fc_down_factor is not 0 else  int(com['stride'])
             elif  com['type'] == 'fc':
                 if pre_com['type'] == 'conv':
-                    in_channel = self.feedback_num + math.ceil(self.img_w/ fc_down_factor) * math.ceil(self.img_h/ fc_down_factor) * pre_com['out_channel'] #because default padding is 'SAME'
+                    if 'spatial_softmax' in pre_com:
+                        in_channel = self.feedback_num + int(pre_com['out_channel'] * 2)
+                    else:
+                        in_channel = self.feedback_num + math.ceil(self.img_w/ fc_down_factor) * math.ceil(self.img_h/ fc_down_factor) * pre_com['out_channel'] #because default padding is 'SAME'
                     print('first layer')
                     print('\t fc_down_factor = '+ str(fc_down_factor))
                     print('\t in_channel = '+ str(in_channel))
@@ -99,61 +102,58 @@ class BehaviorClone(object):
         # print('before reshape -> ys.shape = ' + str(gif_actions.shape))
         # x_image = tf.placeholder(tf.float32, [None, 240, 240, 3], name='im_image') 
         # ys = tf.placeholder(tf.float32, [None, 2], name='im_pos')
-        gif_len = self.pic_num_each_gif if self.pic_num_each_gif is not None else -1
+        gif_len  = self.pic_num_each_gif if self.pic_num_each_gif is not None else -1
         gif_pics = tf.reshape(gif_pics, [gif_len, self.img_h, self.img_w, self.img_d])
-        # gif_pics = tf.reshape(gif_pics, [-1, self.img_w, self.img_h, self.img_d])
 
-        # gif_actions =  tf.reshape(gif_actions, [-1, 2])
-        # print('after reshape -> gif_pics.shape = ' + str(gif_pics.shape))
+        # build conv layer
+        conv_in, conv_out = gif_pics, None
+        for key in sorted(cfg['network']):
+            com = cfg['network'][key]        #component
+            if com['type'] in 'conv':
+                conv_out = Conv2D(conv_in, com['kernel_size'], com['out_channel'], name_prefix=key)
+                conv_in  = conv_out
+                if 'spatial_softmax' in com:
+                    print('last_conv.shape =', conv_in.shape)
+                    conv_out = tf.contrib.layers.spatial_softmax(conv_in, name='spatial_softmax')
 
-        conv1 = Conv2D(gif_pics, 3, 30, name_prefix='im_conv_1')
-        conv2 = Conv2D(conv1, 3, 30, name_prefix='im_conv_2')
-        conv3 = Conv2D(conv2, 3, 30, name_prefix='im_conv_3')
+        # build feedback and bias layer
+        print('before contact, im_flat', conv_out.shape)
+        fc_input = tf.concat([conv_out, self.batch_feedback], axis=1)
 
-        # conv1 = Conv2D(gif_pics, 3, 32, name_prefix='im_conv_1')
-        # conv2 = Conv2D(conv1, 3, 48, name_prefix='im_conv_2')
-        # conv3 = Conv2D(conv2, 3, 64, name_prefix='im_conv_3')
-        # conv4 = Conv2D(conv3, 3, 128, name_prefix='im_conv_4')
+        context = tf.get_variable(cfg['network']['im_fc_1']['bias_transform_name'])
+        print('before reshape context', context.shape)
 
-        softmax = tf.contrib.layers.spatial_softmax(conv3, name='spatial_softmax')
-        flat  = Flaten(softmax)
-        fc_input = tf.concat([flat, self.batch_feedback], axis=1)
-
-        print('before contact, im_flat', fc_input)
-        context = tf.get_variable('context')
-        print('before reshape context', context)
-
-        zero_tensor = tf.zeros_like(fc_input)[:, :10]
+        zero_tensor = tf.zeros_like(fc_input)[:, :cfg['network']['im_fc_1']['bias_transform']]
         context = zero_tensor + context
         fc_input = tf.concat([fc_input, context], axis=1)
 
         print('zero_tensor', zero_tensor)
-        print('after reshape context', context)
+        print('after reshape context', context.shape)
         print('context', context)
-        print('im_flat', fc_input)
+        print('after contact, im_flat', fc_input)
 
-        fc1 = FC(fc_input, 200, name_prefix = 'im_fc_1', op='none')
-        if self.drop_out: 
-            print('Use drop_out!')
-            fc1 = tf.nn.dropout(fc1, 0.5)
-        
-        fc2 = FC(fc1, 200, name_prefix = 'im_fc_2', op='none')
-        if self.drop_out: fc2 = tf.nn.dropout(fc2, 0.5)
+        # build fc layer
+        fc_out = None
+        for key in sorted(cfg['network']):
+            com = cfg['network'][key]        #component
+            if com['type'] in 'fc':
+                fc_out = FC(fc_input, com['size'], name_prefix=key, op='none')
+                if self.drop_out:
+                    if 'im_fc_1' == key:    print('Use drop_out!')
+                    fc_out = tf.nn.dropout(fc_out, 0.5)
+                fc_input = fc_out
 
-        im_prediction = FC(fc2, self.outs, name_prefix='im_prediction', op='none')
-        return im_prediction
+        # im_prediction
+        return fc_out
 
     def build_prediction(self, in_elems):
+        ''' in_elems include input_gif and label_action '''
         gif_pics, gif_actions = in_elems
-        with tf.variable_scope("tower", reuse=True): # tf.AUTO_REUSE #reuse=(True if i > 0 else None) ):
+        with tf.variable_scope("tower", reuse=tf.AUTO_REUSE): # tf.AUTO_REUSE #reuse=(True if i > 0 else None) ):
             gif_prediction = self.build_network(gif_pics)
             # print('gif_prediction.shape = ' + str(gif_prediction.shape))
             # print('gif_actions.shape = ' + str(gif_actions.shape))
-            gif_dis = euclidean(gif_prediction, gif_actions)
-            # for i in range(1000):
-                # print('gif_dis.shape = ' + str(gif_dis.shape))
-            # shape: (20, 1)
-            # gif_loss = tf.reduce_mean(gif_dis)
+            gif_dis  = euclidean(gif_prediction, gif_actions)
             gif_loss = tf.reduce_sum(gif_dis)
 
             # print('gif_prediction.shape',gif_prediction.shape)
@@ -161,16 +161,12 @@ class BehaviorClone(object):
         return [gif_prediction, gif_loss]
 
     def build_inputs_and_outputs(self, gif=None, fdb=None, cmd=None): #, batch_gif_tensor):
-
         print('START----------build_inputs_and_outputs()-----------')
         batch_gif_shape = [self.pic_num_each_gif, self.img_h, self.img_w, self.img_d]
-        # batch_gif_shape = [None self.img_h, self.img_w, self.img_d]
 
         self.batch_gif = tf.placeholder(tf.float32, batch_gif_shape, name='batch_gif') if gif is None else gif
         self.batch_action   = tf.placeholder(tf.float32, [self.pic_num_each_gif, self.outs], name='batch_gif_action') if cmd is None else cmd
         self.batch_feedback = tf.placeholder(tf.float32, [self.pic_num_each_gif, self.feedback_num], name='batch_gif_feedback') if fdb is None else fdb
-
-        #self.batch_action = tf.placeholder(tf.float32, [None, 11], name='batch_gif_action') 
         
         # fn = lambda x: self.build_prediction(x)
         # out_dtype = [tf.float32, tf.float32]
@@ -192,8 +188,7 @@ class BehaviorClone(object):
         print('END----------build_inputs_and_outputs()-----------')
         
     def build_train_op(self):
-        assert self.total_im_loss is not None, 'build_train_op() say self.total_im_loss is None'
-        
+        assert self.total_im_loss is not None, 'build_train_op() say self.total_im_loss is None'        
         self.train_op = tf.train.AdamOptimizer(1e-4).minimize(self.total_im_loss)
         # return batch_result
 

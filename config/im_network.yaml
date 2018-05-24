@@ -8,27 +8,28 @@ robot_configuration_num: 14
 network: 
     im_conv_1: 
         type: 'conv'
-        kernel_size: 3
-        out_channel: 30
+        kernel_size: 7
+        out_channel: 64
         stride: 2
     im_conv_2: 
         type: 'conv'
-        kernel_size: 3
-        out_channel: 30 
+        kernel_size: 5
+        out_channel: 32
         stride: 2
     im_conv_3: 
         type: 'conv'
-        kernel_size: 3
-        out_channel: 30
+        kernel_size: 5
+        out_channel: 16
         stride: 2
+        spatial_softmax: 
     im_fc_1:
         type: 'fc'
         size: 200
-        bias_transform: 10
+        bias_transform: 20
         bias_transform_name: 'context'
     im_fc_2:
         type: 'fc'
-        size: 200
+        size: 128
     im_prediction:
         type: 'fc'
         size: 10
