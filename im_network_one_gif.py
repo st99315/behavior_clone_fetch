@@ -174,7 +174,7 @@ class BehaviorClone(object):
         return [gif_prediction, gif_loss]
 
     def build_inputs_and_outputs(self, gif=None, fdb=None, cmd=None): #, batch_gif_tensor):
-        self.logger.info('Start ---------- build_inputs_and_outputs() -----------')
+        self.logger.debug('Start ---------- build_inputs_and_outputs() -----------')
         # print('START----------build_inputs_and_outputs()-----------')
         batch_gif_shape = [self.pic_num_each_gif, self.img_h, self.img_w, self.img_d]
 
@@ -191,7 +191,7 @@ class BehaviorClone(object):
         self.total_im_loss = tf.reduce_mean(self.batch_loss)
         # self.total_im_loss = tf.reduce_sum(self.batch_loss)
 
-        self.logger.info('total_im_loss = {}'.format(self.total_im_loss))
+        self.logger.debug('total_im_loss = {}'.format(self.total_im_loss))
         # print('total_im_loss= ', self.total_im_loss)
         # # self.batch_prediction, self.batch_loss
         # print('self.batch_prediction.shape',self.batch_prediction.shape)
@@ -201,7 +201,7 @@ class BehaviorClone(object):
         self.batch_prediction.shape (?, 20, 2)
         self.batch_loss.shape (?,)
         '''
-        self.logger.info('End ---------- build_inputs_and_outputs() -----------')
+        self.logger.debug('End ---------- build_inputs_and_outputs() -----------')
         # print('END----------build_inputs_and_outputs()-----------')
         
     def build_train_op(self):
