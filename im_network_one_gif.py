@@ -125,6 +125,10 @@ class BehaviorClone(object):
                     # print('Last_conv.shape =', conv_in.shape)
                     conv_out = tf.contrib.layers.spatial_softmax(conv_in, name='spatial_softmax')
 
+        # if don't have spatial softmax need to flatten
+        if len(conv_out.shape) > 2:
+            conv_out = Flaten(conv_out)
+
         # build feedback and bias layer
         self.logger.debug('Before contact, im_flat {}'.format(conv_out.shape))
         # print('before contact, im_flat', conv_out.shape)
