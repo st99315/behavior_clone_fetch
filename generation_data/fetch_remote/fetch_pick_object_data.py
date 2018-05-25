@@ -86,6 +86,7 @@ for noenv, env_name in enumerate(env_xmls):
         # plt.imshow(rgb_obs)
         # plt.show(block=False)
         # plt.pause(0.001)
+
         print(i)
         if args.save:
             saver.save(i)
