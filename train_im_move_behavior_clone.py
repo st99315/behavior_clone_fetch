@@ -15,7 +15,7 @@ from utils import print_all_var, recreate_dir
 from utils import set_logger, show_use_time
 
 
-_DATASET_DIR = './generation_data/train_data_diff_color_0523/'
+_DATASET_DIR = './generation_data/train_data_diff_color_0525/'
 _TRAIN_DATA = _DATASET_DIR + 'train_data/object_0'
 _VALID_DATA = _DATASET_DIR + 'valid_data/object_0'
 
