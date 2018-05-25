@@ -12,7 +12,7 @@ class FSM:
     def __init__(self, robot_state, obj_pos, goal_pos, limit_z):
         self.state = self.fsm_state[0]
         self.next_state = self.state
-        self.start = False
+        self.step = 0
         self._done = False
         self.robot_state = robot_state
         self.obj_pos = obj_pos.copy()
@@ -35,10 +35,10 @@ class FSM:
 
     def execute(self):
         x, y, z, g = 0., 0., 0., 0
+        self.step += 1
+
         if self.state == 'idle':
-            if not self.start:
-                self.next_state = 'go_obj'
-                self.start = True
+            self.next_state = 'go_obj'
             # output
             x, y, z, g = 0., 0., 0., self.robot_state[-1]
         elif self.state == 'go_obj':
@@ -76,22 +76,23 @@ class FSM:
         return x, y, z, g
             
     def wait_robot(self):
+        if self.state == 'idle':
+            if self.step <= 5:
+                return
         if self.state == 'go_obj':
             if goal_distance(self.robot_state[:2], self.obj_pos[:2]) > self._DIS_ERROR:
-                # print(goal_distance(self.robot_state[:2], self.obj_pos[:2]))
                 return
         elif self.state == 'down':
             if goal_distance(self.robot_state[:3], self.obj_pos) > self._DIS_ERROR:
                 return
-        # Done!!!
         elif self.state == 'up':
             if goal_distance(self.robot_state[:3], self.tar_pos) > self._DIS_ERROR:
                 return
-            # TODO: Revise this appoarch to change goal pos
-            self._done = True
+        # Done!!!
         elif self.state == 'go_goal':
             if goal_distance(self.robot_state[:3], self.goal_pos) > self._DIS_ERROR:
                 return
+            self._done = True
         elif self.state == 'grip':
             if self.robot_state[-1] >= -.5:
                 return
@@ -122,21 +123,25 @@ if __name__ == '__main__':
     args = utils.get_args()
     utils.set_env_variable(args.display)
 
-    env = FetchPickAndPlaceEnv(xml_file='fetch/myenvs/banded_0002_lacelike_0121.xml')
+    env = FetchPickAndPlaceEnv()
 
-    for i in range(10):
-        obs = env.reset()
-        simple_policy = FSM(np.append(obs['eeinfo'][0], GRIPPER_STATE), obs['achieved_goal'], obs['desired_goal'], LIMIT_Z)
+    for i in range(args.start, args.end):
+        obs = env.reset(rand_text=args.random, rand_shadow=args.random)
+        g = GRIPPER_STATE
+
+        goal = obs['achieved_goal'].copy()
+        goal[-1] = goal[-1] + .1
+        simple_policy = FSM(np.append(obs['eeinfo'][0], g), obs['achieved_goal'], goal, LIMIT_Z)
         total_reward = 0
 
-        while not simple_policy.is_done:
+        while not simple_policy.done:
             x, y, z, g = simple_policy.execute()
             # scale up action
             a = np.array([x, y, z, g]) * SCALE_SPEED
             obs, r, done, info = env.step(a)
-
             # update robot state
             simple_policy.robot_state = np.append(obs['eeinfo'][0], g)
+            
             total_reward += r
 
             if args.display:
@@ -144,10 +149,12 @@ if __name__ == '__main__':
             else:
                 rgb_obs = env.sim.render(width=200, height=200, camera_name="external_camera_0", depth=False,
                     mode='offscreen', device_id=-1)
-                plt.imshow(rgb_obs)
-                plt.show(block=False)
-                plt.pause(0.001)
 
             if info['is_success'] or done:
-                print(i, "total reward %0.2f" % total_reward)
                 break
+
+        plt.imshow(rgb_obs)
+        plt.show(block=False)
+        plt.pause(0.001)
+
+        print(i, "total reward %0.2f" % total_reward)

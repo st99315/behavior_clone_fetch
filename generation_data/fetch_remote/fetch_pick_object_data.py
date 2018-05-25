@@ -44,7 +44,10 @@ for noenv, env_name in enumerate(env_xmls):
         g = GRIPPER_STATE
         # save object and goal pos
         tar_info.append(trajectory=np.append(obs['achieved_goal'], obs['desired_goal']))
-        simple_policy = FSM(np.append(obs['eeinfo'][0], g), obs['achieved_goal'], obs['desired_goal'], LIMIT_Z)
+
+        goal = obs['achieved_goal'].copy()
+        goal[-1] = goal[-1] + .1
+        simple_policy = FSM(np.append(obs['eeinfo'][0], g), obs['achieved_goal'], goal, LIMIT_Z)
         total_reward = 0
 
         a = np.array([0., 0., 0., 1.])
