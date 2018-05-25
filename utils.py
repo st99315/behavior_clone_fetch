@@ -166,7 +166,7 @@ def show_use_time(total_time, head_str='Use time:', logger=None):
         print('{} {:0>3d}h{:0>2d}m{:0>2d}s'.format(head_str, h, m, s))
     
 
-def set_logger(filename='training.log', log_dir='./log'):
+def set_logger(logger_names=[], filename='training.log', log_dir='./log'):
     ''' Logging Levels
         CRITICAL 50
         ERROR    40
@@ -192,7 +192,7 @@ def set_logger(filename='training.log', log_dir='./log'):
     console.setLevel(logging.INFO)
 
     # set a format which is simpler for console use
-    formatter = logging.Formatter('[%(levelname)-7s] %(message)s')
+    formatter = logging.Formatter('%(name)-10s [%(levelname)-7s] %(message)s')
 
     # tell the handler to use this format
     console.setFormatter(formatter)
@@ -202,6 +202,12 @@ def set_logger(filename='training.log', log_dir='./log'):
 
     # Now, define a couple of other loggers which might represent areas in your
     # application:
-    logger1 = logging.getLogger('build_step')
-    logger2 = logging.getLogger('train_step')
-    return logging, logger1, logger2
+    loggerlists = [logging]
+    for name in logger_names:
+        loggerlists.append(logging.getLogger(name))
+
+    ''' Return logger lists
+            first is basic logger (root)
+            otherwise are requesting logger from logger_names
+    '''
+    return loggerlists

@@ -28,7 +28,7 @@ flags.DEFINE_string('log_dir', 'log/', 'log directory')
 flags.DEFINE_string('model_dir', 'checkpoints/', 'model directory')
 
 # get logger
-logger, build_logger, train_logger = set_logger(log_dir='logging_log')
+logger, build_logger, train_logger = set_logger(['build', 'train'], log_dir='logging_log')
 summary_writer = tf.summary.FileWriter(FLAGS.log_dir)
 
 

@@ -14,6 +14,7 @@ try:
 except ImportError:
     import generation_data.fetch_remote.utils as frutils
 from config import cfg
+import utils
 
 
 CKPT_DIR = 'checkpoints/'
@@ -28,8 +29,10 @@ frutils.set_env_variable(args.display)
 
 env = FetchPickAndPlaceEnv(xml_file=XML_PATH)
 # env = FetchPickAndPlaceJointEnv(xml_file=XML_PATH)
-    
-m = BehaviorClone(training=False)
+
+_, build_log, run_log, fb_log = utils.set_logger(['build', 'run', 'act_fb'], 'test.log')
+
+m = BehaviorClone(training=False, logger=build_log)
 m.build_inputs_and_outputs()
 
 with tf.Session() as sess:
@@ -38,17 +41,17 @@ with tf.Session() as sess:
 
     model_file = tf.train.latest_checkpoint(log_dir)
     if model_file is not None:
-        print('Use model_file = ' + str(model_file) + '.')
+        build_log.info('Use model_file = ' + str(model_file) + '.')
         saver = tf.train.Saver()
         saver.restore(sess, model_file)
     else: 
-        print('No model, exit')
+        build_log.error('No model, exit')
         exit()
 
     upper_sucess = 0
     grasp_sucess = 0
     for i in range(1000):
-        obs = env.reset()
+        obs = env.reset(rand_text=True, rand_shadow=True)
         total_reward = 0
         upper = 0
         grasp = 0
@@ -64,23 +67,20 @@ with tf.Session() as sess:
             
             traject = np.append(obs['eeinfo'][0], obs['weneed'])
             traject = np.append(traject, actions)
-            # traject = np.append(traject, obs['gripper_state'])
-            # print('T:', traject)
+            fb_log.debug('ee {} joints {} past {}'.format(traject[:3], traject[3:10], traject[10:]))
+
             traject = traject[np.newaxis, :]
 
             rgb_obs = np.array(rgb_obs, dtype=np.float32)
             rgb_obs -= np.array([123.68, 103.939, 116.779])
             rgb_obs /= 255.
 
-            # if step % 10 == 0:
-            #     plt.figure(2)
-            #     plt.imshow(rgb_obs)
-
             rgb_obs = rgb_obs[np.newaxis, :]
             predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_obs, m.batch_feedback: traject})
             
             predict = np.squeeze(predict)
             actions = np.append(predict[:3], predict[3:4])
+            fb_log.debug('ee {} g {}'.format(actions[:3], actions[3:]))
             
             obs, r, done, info = env.step(actions)
             total_reward += r
@@ -109,12 +109,13 @@ with tf.Session() as sess:
             if info['is_success'] or done:
                 break
 
-        # plt.figure(1)
-        # plt.imshow(gif_pic/255.)
+        # rgb_obs = env.sim.render(width=200, height=200, camera_name="external_camera_0", depth=False,
+        #     mode='offscreen', device_id=-1)
         # plt.figure(2)
         # plt.imshow(rgb_obs)
         # plt.show(block=False)
         # plt.pause(0.001)
-        upper_sucess += upper
-        print(i, "total reward %0.2f. sucess %d rate %.2f" % (total_reward, upper_sucess, upper_sucess / (i+1)))
 
+        upper_sucess += upper
+        # print(i, "total reward %0.2f. sucess %d rate %.2f" % (total_reward, upper_sucess, upper_sucess / (i+1)))
+        run_log.info("%d total reward %0.2f. sucess %d rate %.2f \n" % (i, total_reward, upper_sucess, upper_sucess / (i+1)))

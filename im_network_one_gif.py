@@ -2,6 +2,7 @@ import tensorflow as tf
 from DNN_v2 import *
 from config import cfg
 import math
+import utils
 
 
 def euclidean(x, y, multi=100.0):
@@ -29,7 +30,7 @@ def print_each_w_b():
 
 class BehaviorClone(object):
     def __init__(self, training=True, logger=None):
-        self.logger = logger
+        self.logger = logger if logger is not None else utils.set_logger(['bulid'], 'bulid_log')[1]
         self.batch_size = cfg['batch_size']
         self.pic_num_each_gif = cfg['pic_num_each_gif']
         self.img_w = cfg['image_width']
