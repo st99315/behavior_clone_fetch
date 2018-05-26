@@ -18,8 +18,8 @@ def check_dir(dir):
 class DataSaver:
     _INFO_HEADER    = 'Object(X, Y, Z), Gosl(X, Y, Z)'
     _TRAJECT_HEADER = (
-        'Feedback: EE(X, Y, Z), Joint(0, 1, 2, 3, 4, 5, 6), PastCommand(X, Y, Z, G), ' +
-        'Command: EE velocity (X, Y, Z), GripperCommand' +
+        'Feedback: EE(X, Y, Z), Joint(0, 1, 2, 3, 4, 5, 6), GripperState(Dense), ' +
+        'Command: EE velocity (X, Y, Z), GripperCommand, ' +
         'Auxiliary: Object(X, Y, Z), EE(X, Y, Z)')
 
     def __init__(self, directory, info=False):

@@ -7,6 +7,7 @@ from gym.envs.robotics.fetch_env import goal_distance
 class FSM:
     _DIS_ERROR      = 0.005
     _PREGRIP_HEIGHT = 0.1
+    _SKIP_STEP      = 5
     fsm_state = ('idle', 'go_obj', 'down', 'grip', 'up', 'go_goal')
 
     def __init__(self, robot_state, obj_pos, goal_pos, limit_z):
@@ -35,7 +36,6 @@ class FSM:
 
     def execute(self):
         x, y, z, g = 0., 0., 0., 0
-        self.step += 1
 
         if self.state == 'idle':
             self.next_state = 'go_obj'
@@ -72,12 +72,13 @@ class FSM:
             x, y, z = self.goal_pos - self.robot_state[:3]
             g = self.robot_state[-1]
 
+        self.step += 1
         self.wait_robot()
         return x, y, z, g
             
     def wait_robot(self):
         if self.state == 'idle':
-            if self.step <= 5:
+            if self.step < self._SKIP_STEP:
                 return
         if self.state == 'go_obj':
             if goal_distance(self.robot_state[:2], self.obj_pos[:2]) > self._DIS_ERROR:
@@ -94,9 +95,11 @@ class FSM:
                 return
             self._done = True
         elif self.state == 'grip':
-            if self.robot_state[-1] >= -.5:
+            if self.step < self._SKIP_STEP or self.robot_state[-1] >= -.5:
                 return
+
         self.state = self.next_state
+        self.step = 0
 
 
 if __name__ == '__main__':

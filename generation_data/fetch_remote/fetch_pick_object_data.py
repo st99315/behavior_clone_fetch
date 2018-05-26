@@ -21,9 +21,9 @@ except ImportError:
 
 GRIPPER_STATE = 1
 LIMIT_Z = .415
-SCALE_SPEED = 2.0
+SCALE_SPEED = 4.0
 # desired image size
-IMG_SIZE = 128
+IMG_SIZE = 256
 GYM_PATH = gym.__path__[0]
 XML_DIR = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs')
 
@@ -54,18 +54,20 @@ for noenv, env_name in enumerate(env_xmls):
         while not simple_policy.done:
             # appending current feedback: ee pos (x, y, z), all of robot joints angle and gripper state
             trajectory = np.append(obs['eeinfo'][0], obs['weneed'])
-            # trajectory = np.append(trajectory, obs['gripper_state'])
-            trajectory = np.append(trajectory, a)
+            trajectory = np.append(trajectory, obs['gripper_dense'])
+            # trajectory = np.append(trajectory, a)
 
             x, y, z, g = simple_policy.execute()
+            
+            a = np.array([x, y, z, g])
+            # appending control command: delta ee pos (x, y, z), gripper state
+            trajectory = np.append(trajectory, a)
+
             # scale up action
-            a = np.array([x, y, z, g]) * SCALE_SPEED
+            a = a * SCALE_SPEED 
             obs, r, done, info = env.step(a)
             # update robot state
             simple_policy.robot_state = np.append(obs['eeinfo'][0], g)
-            
-            # appending control command: delta ee pos (x, y, z), gripper state
-            trajectory = np.append(trajectory, a)
             total_reward += r
 
             # appending auxiliary: object and gripper pos
@@ -78,16 +80,15 @@ for noenv, env_name in enumerate(env_xmls):
                 rgb_obs = env.sim.render(width=IMG_SIZE, height=IMG_SIZE, camera_name="external_camera_0", depth=False,
                     mode='offscreen', device_id=-1)
                 saver.append(rgb_obs, trajectory)
-
-            if info['is_success'] or done:
-                print(i, "total reward %0.2f" % total_reward)
+                
+            if info['is_success'] or done: 
                 break
 
         # plt.imshow(rgb_obs)
         # plt.show(block=False)
         # plt.pause(0.001)
+        print(i, "total reward %0.2f" % total_reward)
 
-        print(i)
         if args.save:
             saver.save(i)
             tar_info.save(i)
