@@ -21,7 +21,7 @@ network:
         kernel_size: 3
         out_channel: 64
         stride: 2
-    im_conv_3: 
+    im_conv_4: 
         type: 'conv'
         kernel_size: 3
         out_channel: 32

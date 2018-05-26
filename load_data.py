@@ -9,6 +9,7 @@ import os
 import tensorflow as tf
 import glob
 import random
+import config
 
 
 def get_gifs_mean(path):
@@ -45,7 +46,10 @@ class DataLoader:
         self.csv_names = tf.convert_to_tensor(all_csvs)
 
         yaml_path = directory.rpartition('/')[0] + '.yaml'
-        self.data_mean = tf.convert_to_tensor(get_gifs_mean(yaml_path))
+        rgb_mean = get_gifs_mean(yaml_path)
+        DataLoader._logger.debug('RGB mean of dataset, r: {}, g: {}, b: {}' \
+            .format(rgb_mean[0], rgb_mean[1], rgb_mean[2]))
+        self.data_mean = tf.convert_to_tensor(rgb_mean)
 
     @property
     def data_nums(self):
@@ -87,8 +91,9 @@ class DataLoader:
         # transpose tensor
         features = tf.transpose(features, [1, 0])
         # slice features to feedback and command
-        fdb = features[..., :14]
-        cmd = features[..., 14:]
+        feedback_num = config.cfg['robot_configuration_num']
+        fdb = features[..., :feedback_num]
+        cmd = features[..., feedback_num:]
         return key, fdb, cmd
 
     def input_pipeline(self, batch_size=1, num_epochs=None):
