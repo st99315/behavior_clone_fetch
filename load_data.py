@@ -40,8 +40,6 @@ class DataLoader:
 
         DataLoader._logger.info('All data: {}'.format(self.data_num))
         assert self.data_num is not 0, DataLoader._logger.error('No data loaded!')
-        # print('all data:', self.data_num)
-        # assert self.data_num is not 0, 'No data loaded!'
         
         self.gif_names = tf.convert_to_tensor(all_gifs)
         self.csv_names = tf.convert_to_tensor(all_csvs)
@@ -117,6 +115,9 @@ class DataLoader:
 
     @staticmethod
     def set_logger(logger):
+        if logger is None:
+            import utils
+            logger = utils.set_logger()
         DataLoader._logger = logger
 
     @staticmethod
@@ -157,6 +158,7 @@ def _load_step():
     _VALID_DIRECTORY = '../train_data_same_color_0516/valid_data/object_0'
     _EPOCHS = 5
 
+    DataLoader.set_logger(None)
     train_dlr = DataLoader(_TRAIN_DIRECTORY)
     valid_dlr = DataLoader(_VALID_DIRECTORY)
 

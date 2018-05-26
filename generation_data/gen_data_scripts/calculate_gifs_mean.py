@@ -62,7 +62,7 @@ content = {
     }
 }
 
-filename = os.path(_DATASET_DIR, _DATASET_NAME, _DATASET_TYPE + '.yaml')
+filename = os.path.join(_DATASET_DIR, _DATASET_NAME, _DATASET_TYPE + '.yaml')
 print('save to', filename)
 print(yaml.dump(content, default_flow_style=False))
 
