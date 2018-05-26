@@ -117,5 +117,4 @@ with tf.Session() as sess:
         # plt.pause(0.001)
 
         upper_sucess += upper
-        # print(i, "total reward %0.2f. sucess %d rate %.2f" % (total_reward, upper_sucess, upper_sucess / (i+1)))
         run_log.info("%d total reward %0.2f. sucess %d rate %.2f \n" % (i, total_reward, upper_sucess, upper_sucess / (i+1)))

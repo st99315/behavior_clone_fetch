@@ -64,11 +64,12 @@ class BehaviorClone(object):
                     in_channel = pre_com['out_channel']
                 else:
                     self.logger.error('build_weight() say Error component property, in conv else')
-                    # print('build_weight() say Error component property, in conv else ')
+
                 w_shape = [com['kernel_size'], com['kernel_size'], in_channel, com['out_channel']]
                 com['w'] = weight_variable(w_shape , name= key + "_w") 
                 com['b'] = bias_variable([com['out_channel']]  , name= key + "_b")
                 fc_down_factor = fc_down_factor * int(com['stride']) if fc_down_factor is not 0 else  int(com['stride'])
+
             elif  com['type'] == 'fc':
                 if pre_com['type'] == 'conv':
                     if 'spatial_softmax' in pre_com:
@@ -78,20 +79,16 @@ class BehaviorClone(object):
                     self.logger.info('first layer')
                     self.logger.info('\t fc_down_factor = '+ str(fc_down_factor))
                     self.logger.info('\t in_channel = '+ str(in_channel))
-                    # print('first layer')
-                    # print('\t fc_down_factor = '+ str(fc_down_factor))
-                    # print('\t in_channel = '+ str(in_channel))
 
                 elif pre_com['type'] == 'fc':
                     in_channel =  pre_com['size']
                 else:
                     self.logger.error('build_weight() say Error component property, in conv else ')
-                    # print('build_weight() say Error component property, in conv else ')
+
                 fc_size = com['size']
 
                 if 'bias_transform' in com:
                     self.logger.info('in this com[bias_transform] = ' + str(com['bias_transform']))
-                    # print('in this com[bias_transform] = ' + str(com['bias_transform']))
                     n =  com['bias_transform_name']
                     context = bias_variable([com['bias_transform'] ], name = n) 
                     in_channel += com['bias_transform']
@@ -122,7 +119,6 @@ class BehaviorClone(object):
                 conv_in  = conv_out
                 if 'spatial_softmax' in com:
                     self.logger.debug('Last_conv.shape = {}'.format(conv_in.shape))
-                    # print('Last_conv.shape =', conv_in.shape)
                     conv_out = tf.contrib.layers.spatial_softmax(conv_in, name='spatial_softmax')
 
         # if don't have spatial softmax need to flatten
@@ -131,12 +127,10 @@ class BehaviorClone(object):
 
         # build feedback and bias layer
         self.logger.debug('Before contact, im_flat {}'.format(conv_out.shape))
-        # print('before contact, im_flat', conv_out.shape)
         fc_input = tf.concat([conv_out, self.batch_feedback], axis=1)
 
         context = tf.get_variable(cfg['network']['im_fc_1']['bias_transform_name'])
         self.logger.debug('Before reshape context {}'.format(context.shape))
-        # print('before reshape context', context.shape)
 
         zero_tensor = tf.zeros_like(fc_input)[:, :cfg['network']['im_fc_1']['bias_transform']]
         context = zero_tensor + context
@@ -146,10 +140,6 @@ class BehaviorClone(object):
         self.logger.debug('after reshape context {}'.format(context.shape))
         self.logger.debug('context {}'.format(context))
         self.logger.debug('after contact, im_flat {}'.format(fc_input))
-        # print('zero_tensor', zero_tensor)
-        # print('after reshape context', context.shape)
-        # print('context', context)
-        # print('after contact, im_flat', fc_input)
 
         # build fc layer
         fc_out = None
@@ -169,18 +159,15 @@ class BehaviorClone(object):
         gif_pics, gif_actions = in_elems
         with tf.variable_scope("tower", reuse=tf.AUTO_REUSE): # tf.AUTO_REUSE #reuse=(True if i > 0 else None) ):
             gif_prediction = self.build_network(gif_pics)
-            # print('gif_prediction.shape = ' + str(gif_prediction.shape))
-            # print('gif_actions.shape = ' + str(gif_actions.shape))
+
             gif_dis  = euclidean(gif_prediction, gif_actions)
             gif_loss = tf.reduce_sum(gif_dis)
 
-            # print('gif_prediction.shape',gif_prediction.shape)
             # print('gif_loss.shape',gif_loss.shape)
         return [gif_prediction, gif_loss]
 
     def build_inputs_and_outputs(self, gif=None, fdb=None, cmd=None): #, batch_gif_tensor):
         self.logger.debug('Start ---------- build_inputs_and_outputs() -----------')
-        # print('START----------build_inputs_and_outputs()-----------')
         batch_gif_shape = [self.pic_num_each_gif, self.img_h, self.img_w, self.img_d]
 
         self.batch_gif = tf.placeholder(tf.float32, batch_gif_shape, name='batch_gif') if gif is None else gif
@@ -197,8 +184,7 @@ class BehaviorClone(object):
         # self.total_im_loss = tf.reduce_sum(self.batch_loss)
 
         self.logger.debug('total_im_loss = {}'.format(self.total_im_loss))
-        # print('total_im_loss= ', self.total_im_loss)
-        # # self.batch_prediction, self.batch_loss
+        # self.batch_prediction, self.batch_loss
         # print('self.batch_prediction.shape',self.batch_prediction.shape)
         # print('self.batch_loss.shape',self.batch_loss.shape)
         # print('self.batch_result.shape',np.array(self.batch_result).shape)
@@ -207,12 +193,10 @@ class BehaviorClone(object):
         self.batch_loss.shape (?,)
         '''
         self.logger.debug('End ---------- build_inputs_and_outputs() -----------')
-        # print('END----------build_inputs_and_outputs()-----------')
         
     def build_train_op(self):
         assert self.total_im_loss is not None, self.logger.error('build_train_op() say self.total_im_loss is None')      
         self.train_op = tf.train.AdamOptimizer(1e-4).minimize(self.total_im_loss)
-        # return batch_result
 
     def set_network_property(self, drop_out=False):
         if drop_out: self.logger.info('Set Drop Out')

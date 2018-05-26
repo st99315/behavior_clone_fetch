@@ -15,7 +15,7 @@ from utils import print_all_var, recreate_dir
 from utils import set_logger, show_use_time
 
 
-_DATASET_DIR = './generation_data/train_data_diff_color_0525/'
+_DATASET_DIR = './generation_data/train_data_diff_color_0526/'
 _TRAIN_DATA = _DATASET_DIR + 'train_data/object_0'
 _VALID_DATA = _DATASET_DIR + 'valid_data/object_0'
 
@@ -38,18 +38,14 @@ def get_trainable_dic():
         name = v.name.replace(":0", "")
         all_w_b[name] = v
         build_logger.info('{}->{}'.format(name, v))
-        # print('{}->{}'.format(name, v))
     build_logger.info('')
-    # print()
     return all_w_b 
 
 
 def save_model(sess, saver, epoch, show_str, g_step):
     save_model_path = 'checkpoints/'
-    # saver.save(sess, save_model_path+'model-{:0>3d}.ckpt'.format(epoch))
     saver.save(sess, save_model_path+'model.ckpt', global_step=g_step)
     train_logger.info('Save Model! ' + show_str)
-    # print('Save Model! ' + show_str)
 
 
 def train_all_batch(sess, model, epoch, datanums, training=True):
@@ -57,7 +53,6 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
     start_time = time.time()
     
     train_logger.info('training = {}, head_str={}'.format(training, head_str))
-    # print('training = {}, head_str={}'.format(training, head_str))
 
     sum_pattern = 0.
     im_loss_sum = 0.
@@ -75,11 +70,9 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
                 if i==1:
                     for line in predict:
                         train_logger.debug('pred cmd: {}, obj: {}, grip: {}'.format(line[:4], line[4:7], line[7:]))
-                        # print('pred cmd:', line[:4], 'obj:', line[4:7], 'grip:', line[7:])
 
         except tf.errors.OutOfRangeError:
             train_logger.error('Batch out of range!')
-            # print('BatchOutOfRange')
             exit()
         
         im_loss_sum += total_im_loss
@@ -88,8 +81,6 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
         if i % _PRINT_STEP == 0:
             train_logger.info("{} -> epoch: {:0>4d}, gif_pattern: {:4d}, total_im_loss: {:6.2f}, im_loss_avg: {:4.2f}". \
                 format(head_str, epoch, i, total_im_loss, im_loss_avg))
-            # print("{} -> epoch: {:0>4d}, gif_pattern: {:4d}, total_im_loss: {:6.2f}, im_loss_avg: {:4.2f}". \
-            #     format(head_str, epoch, i, total_im_loss, im_loss_avg))
 
             # summary_writer = tf.summary.FileWriter(FLAGS.log_dir)
             # summary = tf.Summary()
@@ -128,7 +119,6 @@ m.build_inputs_and_outputs(tf.squeeze(gif), tf.squeeze(fdb), tf.squeeze(cmd))
 m.build_train_op()
 
 build_logger.info('--------- After build graph, get_trainable_dic() ------------')
-# print('---------After build graph, get_trainable_dic()------------')
 get_trainable_dic()
 
 # limit memory
@@ -145,16 +135,13 @@ with tf.Session() as sess:
     saver = tf.train.Saver(max_to_keep=5)
     if model_file is not None:
         build_logger.info('Use model_file = ' + str(model_file) + '!')
-        # print('Use model_file = ' + str(model_file) + '!')
         saver.restore(sess, model_file)
         build_logger.info('--------- After build graph, get_trainable_dic() ------------')
-        # print('---------After build graph,  get_trainable_dic()------------')
         get_trainable_dic()
         # get ckpt epoch num
         start_ep = int(model_file.rpartition('-')[-1]) + 1
     else:
         build_logger.info('Initialize all variables')
-        # print('[I] Initialize all variables')
         sess.run(tf.global_variables_initializer())
 
         # if memory out check code
@@ -162,7 +149,6 @@ with tf.Session() as sess:
         # run_options = tf.RunOptions(report_tensor_allocations_upon_oom=True)
         # sess.run(op, options=run_options)
         build_logger.info('Initialize all variables Finish')
-        # print('[I] Initialize all variables Finish')
 
     # record start time
     train_start_time = time.time()
@@ -172,10 +158,8 @@ with tf.Session() as sess:
 
         for ep in range(start_ep, _EPOCHS):
             train_logger.info('----- Train -----')
-            # print('---Train-----')
             train_avg_loss = train_all_batch(sess, m, ep, train_dlr.data_nums)
             train_logger.info('----- Valid -----')
-            # print('---Valid-----')
             valid_avg_loss = valid_batch(sess, m, ep, valid_dlr.data_nums)
 
             epoch_train_loss = np.sqrt(train_avg_loss/100.0)
@@ -193,8 +177,7 @@ with tf.Session() as sess:
 
             train_logger.info("epoch: {:0>4d}, epoch_train_loss: {:4.2f},  epoch_valid_loss: {:4.2f}". \
                 format(ep, epoch_train_loss, epoch_valid_loss))
-            # print("epoch: {:0>4d}, epoch_train_loss: {:4.2f},  epoch_valid_loss: {:4.2f}". \
-            #         format(ep, epoch_train_loss, epoch_valid_loss))
+
             save_model(sess, saver, ep, 'epoch: ' + str(ep), g_step=ep)  
             show_use_time(time.time() - train_start_time, "All use time: ", train_logger)
         
@@ -203,4 +186,3 @@ with tf.Session() as sess:
     finally:
         DataLoader.close()
         logger.info('Stop Training and Logging')
-        # print('close')
