@@ -11,6 +11,18 @@ import glob
 import random
 
 
+def get_gifs_mean(path):
+    import yaml
+    try:
+        with open(path) as file:
+            content = yaml.load(file)
+            mean = content['all_gifs_mean']
+            return [mean['r'], mean['g'], mean['b']]
+    except FileNotFoundError:
+        # ImageNet or VGG dataset RGB mean
+        return [123.68, 103.939, 116.779]
+
+
 class DataLoader:
     """ Need Set Logger """
     _MAX_LEN = 300
@@ -18,7 +30,7 @@ class DataLoader:
     _NUM_THREAD = 1
     _coord, _threads, _logger = None, None, None
 
-    def __init__(self, directory, img_size=128, csv_cols=24, load_num=None):
+    def __init__(self, directory, img_size=128, csv_cols=21, load_num=None):
         self._GIF_SHAPE = (None, img_size, img_size, 3)
         self._CSV_COLS  = csv_cols
 
@@ -33,6 +45,9 @@ class DataLoader:
         
         self.gif_names = tf.convert_to_tensor(all_gifs)
         self.csv_names = tf.convert_to_tensor(all_csvs)
+
+        yaml_path = directory.rpartition('/')[0] + '.yaml'
+        self.data_mean = tf.convert_to_tensor(get_gifs_mean(yaml_path))
 
     @property
     def data_nums(self):
@@ -50,8 +65,7 @@ class DataLoader:
         image.set_shape(self._GIF_SHAPE)
         image = tf.cast(image, tf.float32)
         # normalize
-        # image -= tf.convert_to_tensor([116.779, 103.939, 123.68])
-        image -= tf.convert_to_tensor([123.68, 103.939, 116.779])
+        image -= self.data_mean
         image /= 255.
 
         # Subtract off the mean and divide by the variance of the pixels.

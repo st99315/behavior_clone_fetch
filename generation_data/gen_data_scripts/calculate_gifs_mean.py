@@ -3,7 +3,7 @@ import glob
 
 _DATASET_DIR  = '../'
 _DATASET_NAME = 'train_data_diff_color_0526'
-_DATASET_TYPE = 'valid_data'
+_DATASET_TYPE = 'train_data'
 _DATA_DIR = _DATASET_DIR + _DATASET_NAME + '/' + _DATASET_TYPE + '/object_0'
 
 def get_all_traindata(dir):

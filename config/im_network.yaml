@@ -1,20 +1,25 @@
 batch_size: 5
-image_width: 128
-image_height: 128
+image_width: 256
+image_height: 256
 image_depth: 3
 pic_num_each_gif:
-robot_configuration_num: 14
+robot_configuration_num: 11
 
 network: 
     im_conv_1: 
         type: 'conv'
         kernel_size: 3
-        out_channel: 64
+        out_channel: 128
         stride: 2
     im_conv_2: 
         type: 'conv'
         kernel_size: 3
-        out_channel: 32
+        out_channel: 64
+        stride: 2
+    im_conv_3: 
+        type: 'conv'
+        kernel_size: 3
+        out_channel: 64
         stride: 2
     im_conv_3: 
         type: 'conv'
