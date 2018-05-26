@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # dataset directory
-DIRECTORY_SET="train_data_diff_color_0525"
+DIRECTORY_SET="train_data_diff_color_0526"
 # log directory
 DIRECTORY="train_data"
 
