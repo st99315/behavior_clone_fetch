@@ -68,5 +68,3 @@ print(yaml.dump(content, default_flow_style=False))
 
 with open(filename, 'w') as file:
     yaml.dump(content, file, default_flow_style=False)
-
-

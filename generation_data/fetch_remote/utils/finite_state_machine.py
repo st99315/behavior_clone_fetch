@@ -14,6 +14,7 @@ class FSM:
         self.state = self.fsm_state[0]
         self.next_state = self.state
         # every task costs steps
+        self._every_task = []
         self._step = 0
         self._done = False
         self.robot_state = robot_state
@@ -28,7 +29,8 @@ class FSM:
 
     @property
     def step(self):
-        return self._step
+        ''' Finished task spend step, Current task spend step '''
+        return self._every_task, self._step
 
     @property
     def robot_state(self):
@@ -45,20 +47,20 @@ class FSM:
         if self.state == 'idle':
             self.next_state = 'go_obj'
             # output
-            x, y, z, g = 0., 0., 0., self.robot_state[-1]
+            x, y, z, g = 0., 0., 0., 1.
         elif self.state == 'go_obj':
             self.next_state = 'down'
             # output
             x, y, z = self.obj_pos - self.robot_state[:3]
             z += self._PREGRIP_HEIGHT
-            g = self.robot_state[-1]
+            g = 1.
         elif self.state == 'down':
             self.next_state = 'grip'
             # output
             if self.obj_pos[2] <= self.limit_z:
                 self.obj_pos[2] = self.limit_z
             x, y, z = self.obj_pos - self.robot_state[:3]
-            g = self.robot_state[-1]
+            g = 1.
         elif self.state == 'grip':
             self.next_state = 'up'
             # output
@@ -70,12 +72,12 @@ class FSM:
             self.tar_pos[2] += self._PREGRIP_HEIGHT
             # output
             x, y, z = self.tar_pos - self.robot_state[:3]
-            g = self.robot_state[-1]
+            g = -1
         elif self.state == 'go_goal':
             # self.next_state = 'idle'
             # output
             x, y, z = self.goal_pos - self.robot_state[:3]
-            g = self.robot_state[-1]
+            g = -1
 
         self._step += 1
         self.wait_robot()
@@ -104,7 +106,8 @@ class FSM:
                 return
 
         self.state = self.next_state
-        self.step = 0
+        self._every_task.append(self._step)
+        self._step = 0
 
 
 if __name__ == '__main__':

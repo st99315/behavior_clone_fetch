@@ -10,6 +10,7 @@ import tensorflow as tf
 import glob
 import random
 import config
+import numpy as np
 
 
 def get_gifs_mean(path):
@@ -18,10 +19,13 @@ def get_gifs_mean(path):
         with open(path) as file:
             content = yaml.load(file)
             mean = content['all_gifs_mean']
-            return [mean['r'], mean['g'], mean['b']]
+            mean_list = [mean['r'], mean['g'], mean['b']]
     except FileNotFoundError:
         # ImageNet or VGG dataset RGB mean
-        return [123.68, 103.939, 116.779]
+        mean_list = [123.68, 103.939, 116.779]
+    finally:
+        print('Load Mean:', mean_list)
+        return np.array(mean_list)
 
 
 class DataLoader:
@@ -45,19 +49,27 @@ class DataLoader:
         self.gif_names = tf.convert_to_tensor(all_gifs)
         self.csv_names = tf.convert_to_tensor(all_csvs)
 
-        yaml_path = directory.rpartition('/')[0] + '.yaml'
+        yaml_path = os.path.join(directory, directory.rpartition('/')[-1] + '.yaml')
         rgb_mean = get_gifs_mean(yaml_path)
         DataLoader._logger.debug('RGB mean of dataset, r: {}, g: {}, b: {}' \
             .format(rgb_mean[0], rgb_mean[1], rgb_mean[2]))
-        self.data_mean = tf.convert_to_tensor(rgb_mean)
+        self.data_mean = tf.convert_to_tensor(rgb_mean, tf.float32)
 
     @property
     def data_nums(self):
         return self.data_num
 
     def get_all_filenames(self, dir, shuffle=False, size=None):
-        gifs = glob.glob(os.path.join(dir, '*.gif'))
+        # finf all of folder
+        folders = glob.glob(os.path.join(dir, 'object*'))
+        # get all of gifs
+        gifs = []
+        for folder in folders:
+            gifs.append(glob.glob(os.path.join(folder, '*.gif')))
+        gifs = np.concatenate(gifs)
+        # shuffle list
         if shuffle: random.shuffle(gifs)
+        # get all of csvs
         csvs = []
         for name in gifs:
             csvs.append(name.rpartition('.')[0]+'.csv')

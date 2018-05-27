@@ -36,7 +36,7 @@ for noenv, env_name in enumerate(env_xmls):
     env = FetchPickAndPlaceEnv(xml_file=env_name)
 
     data_save_path = os.path.join(args.dir, 'object_{}'.format(noenv))
-    saver = DataSaver(data_save_path)
+    saver    = DataSaver(data_save_path)
     tar_info = DataSaver(os.path.join(data_save_path, 'target'), info=True)
 
     for i in range(args.start, args.end):
@@ -52,6 +52,14 @@ for noenv, env_name in enumerate(env_xmls):
 
         a = np.array([0., 0., 0., 1.])
         while not simple_policy.done:
+            if args.display:
+                env.render()
+            else:
+                rgb_obs = env.sim.render(width=IMG_SIZE, height=IMG_SIZE, camera_name="external_camera_0", depth=False,
+                    mode='offscreen', device_id=-1)
+                # appending image to saver
+                saver.append(image=rgb_obs)
+    
             # appending current feedback: ee pos (x, y, z), all of robot joints angle and gripper state
             trajectory = np.append(obs['eeinfo'][0], obs['weneed'])
             trajectory = np.append(trajectory, obs['gripper_dense'])
@@ -74,12 +82,8 @@ for noenv, env_name in enumerate(env_xmls):
             trajectory = np.append(trajectory, obs['achieved_goal'])
             trajectory = np.append(trajectory, obs['eeinfo'][0])
 
-            if args.display:
-                env.render()
-            else:
-                rgb_obs = env.sim.render(width=IMG_SIZE, height=IMG_SIZE, camera_name="external_camera_0", depth=False,
-                    mode='offscreen', device_id=-1)
-                saver.append(rgb_obs, trajectory)
+            # appending trajectory to saver
+            saver.append(trajectory=trajectory)
                 
             if info['is_success'] or done: 
                 break

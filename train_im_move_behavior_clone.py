@@ -16,8 +16,8 @@ from utils import set_logger, show_use_time
 
 
 _DATASET_DIR = './generation_data/train_data_diff_color_0526/'
-_TRAIN_DATA = _DATASET_DIR + 'train_data/object_0'
-_VALID_DATA = _DATASET_DIR + 'valid_data/object_0'
+_TRAIN_DATA = _DATASET_DIR + 'train_data/'
+_VALID_DATA = _DATASET_DIR + 'valid_data/'
 
 _EPOCHS = 1000
 _PRINT_STEP = 100

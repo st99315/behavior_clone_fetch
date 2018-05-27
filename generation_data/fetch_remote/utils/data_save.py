@@ -35,21 +35,23 @@ class DataSaver:
         if trajectory is not None:
             self._trajectories.append(trajectory)
 
-    def _save_gif(self, file_name):
+    def _save_gif(self, file_name, clip):
         if not len(self._images):   return
+        self._images = self._images[clip[0]: clip[1]]
         file_path = os.path.join(self.dir, file_name)
         imageio.mimsave(file_path, self._images)
         self._images = []
     
-    def _save_tra(self, file_name):
+    def _save_tra(self, file_name, clip):
         if not len(self._trajectories):   return
+        self._trajectories = self._trajectories[clip[0]: clip[1]]
         file_path = os.path.join(self.dir, file_name)
         np.savetxt(file_path, self._trajectories, delimiter=' ', header=self.header)
         self._trajectories = []
 
-    def save(self, name):
+    def save(self, name, clip=(0, None)):
         # saving data (buffer) to desired directory
         # and clear buffer
-        self._save_gif('{}.gif'.format(name))
-        self._save_tra('{}.csv'.format(name))
+        self._save_gif('{}.gif'.format(name), clip)
+        self._save_tra('{}.csv'.format(name), clip)
 
