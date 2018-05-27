@@ -13,7 +13,8 @@ class FSM:
     def __init__(self, robot_state, obj_pos, goal_pos, limit_z):
         self.state = self.fsm_state[0]
         self.next_state = self.state
-        self.step = 0
+        # every task costs steps
+        self._step = 0
         self._done = False
         self.robot_state = robot_state
         self.obj_pos = obj_pos.copy()
@@ -24,6 +25,10 @@ class FSM:
     def done(self):
         done, self._done = self._done, False
         return done
+
+    @property
+    def step(self):
+        return self._step
 
     @property
     def robot_state(self):
@@ -72,13 +77,13 @@ class FSM:
             x, y, z = self.goal_pos - self.robot_state[:3]
             g = self.robot_state[-1]
 
-        self.step += 1
+        self._step += 1
         self.wait_robot()
         return x, y, z, g
             
     def wait_robot(self):
         if self.state == 'idle':
-            if self.step < self._SKIP_STEP:
+            if self._step < self._SKIP_STEP:
                 return
         if self.state == 'go_obj':
             if goal_distance(self.robot_state[:2], self.obj_pos[:2]) > self._DIS_ERROR:
@@ -95,7 +100,7 @@ class FSM:
                 return
             self._done = True
         elif self.state == 'grip':
-            if self.step < self._SKIP_STEP or self.robot_state[-1] >= -.5:
+            if self._step < self._SKIP_STEP or self.robot_state[-1] >= -.5:
                 return
 
         self.state = self.next_state
