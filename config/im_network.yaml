@@ -9,19 +9,34 @@ network:
     im_conv_1: 
         type: 'conv'
         kernel_size: 3
-        out_channel: 128
-        stride: 2
-    im_conv_2: 
-        type: 'conv'
-        kernel_size: 3
-        out_channel: 64
+        out_channel: 256
         stride: 2
     im_conv_3: 
         type: 'conv'
         kernel_size: 3
+        out_channel: 128
+        stride: 1
+    im_conv_4: 
+        type: 'conv'
+        kernel_size: 3
+        out_channel: 128
+        stride: 2
+    im_conv_5: 
+        type: 'conv'
+        kernel_size: 3
+        out_channel: 64
+        stride: 1
+    im_conv_6: 
+        type: 'conv'
+        kernel_size: 3
         out_channel: 64
         stride: 2
-    im_conv_4: 
+    im_conv_7: 
+        type: 'conv'
+        kernel_size: 3
+        out_channel: 32
+        stride: 1
+    im_conv_8: 
         type: 'conv'
         kernel_size: 3
         out_channel: 32
@@ -29,13 +44,15 @@ network:
         spatial_softmax:
     im_fc_1:
         type: 'fc'
-        size: 200
+        size: 256
         bias_transform: 20
         bias_transform_name: 'context'
+        activation: 'softmax'
     im_fc_2:
         type: 'fc'
         size: 128
+        activation: 'softmax'
     im_prediction:
         type: 'fc'
         size: 10
-    
+        activation: 

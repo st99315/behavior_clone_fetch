@@ -72,12 +72,15 @@ def FC(x, fc_size=1024, name_prefix='fc', w=None, b=None, initializer='xavier', 
     if b == None:
         b = bias_variable([fc_size], name = name_prefix + '_b') 
     
-    if op=='relu':
-        return tf.nn.relu(tf.matmul(x, w) + b, name = name_prefix+ "_relu")
-    elif op=='softmax':
-        return tf.nn.softmax(tf.matmul(x, w) + b, name = name_prefix+ "_softmax")
-    elif op=='none':
-        return tf.matmul(x, w) + b
+    if op is None:
+        activation = lambda x, y: x
+    elif op == 'relu':
+        activation = tf.nn.relu
+    elif op == 'softmax':
+        activation = tf.nn.softmax
     else:
         print('error op ==' + op)
-   
+        exit()
+
+    return activation(tf.matmul(x, w) + b, name=name_prefix + "_{}".format(op))
+    
