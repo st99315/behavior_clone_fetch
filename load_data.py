@@ -50,8 +50,9 @@ class DataLoader:
         self.csv_names = tf.convert_to_tensor(all_csvs)
 
         yaml_path = os.path.join(directory, directory.rpartition('/')[-1] + '.yaml')
+        DataLoader._logger.info('yaml path: {}'.format(yaml_path))
         rgb_mean = get_gifs_mean(yaml_path)
-        DataLoader._logger.debug('RGB mean of dataset, r: {}, g: {}, b: {}' \
+        DataLoader._logger.debug('RGB mean, r: {}, g: {}, b: {}' \
             .format(rgb_mean[0], rgb_mean[1], rgb_mean[2]))
         self.data_mean = tf.convert_to_tensor(rgb_mean, tf.float32)
 

@@ -25,16 +25,15 @@ import load_data
 
 
 CKPT_DIR = 'checkpoints/'
-DATASET_DIR = './generation_data/train_data_diff_color_0526/valid_data'
+DATASET_DIR = './generation_data/train_data_diff_color_0526/train_data'
 
-MAX_EPSO = 100
+MAX_EPSO = 1000
 MAX_STEP = 300
 ONE_TASK = 50
 YAM_FILE = DATASET_DIR.rpartition('/')[-1]+'.yaml'
 GIF_MEAN = load_data.get_gifs_mean(os.path.join(DATASET_DIR, YAM_FILE))
 
 GRIPPER_STATE = 1
-LIMIT_Z = .415
 SCALE_SPEED = 4.0
 
 GYM_PATH = gym.__path__[0]
@@ -45,7 +44,7 @@ XML_PATH = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs/blotchy_013
 def get_lastnum(directory):
     try:
         allfiles = glob.glob(os.path.join(directory, 'object*'))
-        sorted_files = sorted(allfiles)
+        sorted_files = sorted(allfiles, key=lambda x: int(x.rpartition('_')[-1]))
         lastnum = int(sorted_files.pop().rpartition('_')[-1])
     except IndexError:
         print('Not Found object folder in', directory)
@@ -78,9 +77,12 @@ with tf.Session() as sess:
         exit()
 
     data_save_path = os.path.join(DATASET_DIR, 'object_{}'.format(get_lastnum(DATASET_DIR) + 1))
+    run_log.info(data_save_path)
     saver    = DataSaver(data_save_path)
     tar_info = DataSaver(os.path.join(data_save_path, 'target'), info=True)
 
+    # count executed task
+    task_exe = np.array([[0, 0, 0, 0, 0]])
     for ep in range(MAX_EPSO):
         obs = env.reset(rand_text=True, rand_shadow=True)
         total_reward = 0
@@ -90,7 +92,8 @@ with tf.Session() as sess:
 
         goal = obs['achieved_goal'].copy()
         goal[-1] = goal[-1] + .1
-        simple_policy = FSM(np.append(obs['eeinfo'][0], GRIPPER_STATE), obs['achieved_goal'], goal, LIMIT_Z)
+        # current feedback, object pos, goal pos
+        simple_policy = FSM(np.append(obs['eeinfo'][0], GRIPPER_STATE), obs['achieved_goal'], goal)
         total_reward = 0
         clip = (0, None)
 
@@ -135,11 +138,6 @@ with tf.Session() as sess:
             trajectory = np.append(trajectory, obs['eeinfo'][0])
             # appending trajectory to saver
             saver.append(trajectory=trajectory)
-            
-            # clip data step
-            finish, current = simple_policy.step
-            if current > ONE_TASK:
-                clip = (0, np.sum(finish) + ONE_TASK)
 
             if info['is_success'] or simple_policy.done:
                 break
@@ -148,6 +146,25 @@ with tf.Session() as sess:
         # plt.show(block=False)
         # plt.pause(0.001)
 
-        saver.save(ep, clip)
-        tar_info.save(ep)
-        run_log.info("%d total reward %0.2f" % (ep, total_reward))
+        # clip data step
+        finish, current = simple_policy.step
+        if current > ONE_TASK:
+            clip = (0, np.sum(finish) + ONE_TASK)
+
+        # record finish task
+        arr_finish = np.array(finish)
+        arr_finish.resize(task_exe.shape, refcheck=False)
+        arr_finish = (arr_finish > 0).astype(np.int)
+        task_exe = np.concatenate((task_exe, arr_finish), axis=0)
+
+        if len(finish) > 0:
+            saver.save(ep, clip)
+            tar_info.save(ep)
+            run_log.info("save   {} total reward {}. finish {} clip {}".format(ep, total_reward, len(finish), clip))
+        else:
+            saver.flush()
+            tar_info.flush()
+            run_log.info("unsave {} total reward {}. finish {} clip {}".format(ep, total_reward, len(finish), clip))
+
+        task_exe = np.sum(task_exe, axis=0)[np.newaxis, :]
+        run_log.info("total finish task {}".format(task_exe))

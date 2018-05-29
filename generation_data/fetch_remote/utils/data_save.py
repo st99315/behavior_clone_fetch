@@ -55,3 +55,7 @@ class DataSaver:
         self._save_gif('{}.gif'.format(name), clip)
         self._save_tra('{}.csv'.format(name), clip)
 
+    def flush(self):
+        # clear buffer
+        self._images = []
+        self._trajectories = []
