@@ -57,14 +57,9 @@ for noenv, env_name in enumerate(env_xmls):
             else:
                 rgb_obs = env.sim.render(width=IMG_SIZE, height=IMG_SIZE, camera_name="external_camera_0", depth=False,
                     mode='offscreen', device_id=-1)
-<<<<<<< HEAD
                 # appending image to saver
                 saver.append(image=rgb_obs)
     
-=======
-                saver.append(rgb_obs)
-
->>>>>>> softmax
             # appending current feedback: ee pos (x, y, z), all of robot joints angle and gripper state
             trajectory = np.append(obs['eeinfo'][0], obs['weneed'])
             trajectory = np.append(trajectory, obs['gripper_dense'])
@@ -88,12 +83,6 @@ for noenv, env_name in enumerate(env_xmls):
             trajectory = np.append(trajectory, obs['eeinfo'][0])
             saver.append(trajectory=trajectory)
 
-<<<<<<< HEAD
-            # appending trajectory to saver
-            saver.append(trajectory=trajectory)
-                
-=======
->>>>>>> softmax
             if info['is_success'] or done: 
                 break
 
