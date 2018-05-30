@@ -84,6 +84,7 @@ with tf.Session() as sess:
             predict = np.squeeze(predict)
             actions = np.append(predict[:3], predict[3:4])
             
+            actions *= 4.
             obs, r, done, info = env.step(actions)
             total_reward += r
 
@@ -99,12 +100,11 @@ with tf.Session() as sess:
                 plt.show(block=False)
                 plt.pause(0.001)
 
-            # if (not upper and 
-            #     goal_distance(obs['eeinfo'][0][:2], obs['achieved_goal'][:2]) < 0.05 and
-            #     obs['eeinfo'][0][-1] > obs['achieved_goal'][-1] + .01):
-            #     upper = 1
-            #     finish.append(upper)
-            #     break
+            if (not upper and 
+                goal_distance(obs['eeinfo'][0][:2], obs['achieved_goal'][:2]) < 0.05 and
+                obs['eeinfo'][0][-1] > obs['achieved_goal'][-1] + .01):
+                upper = 1
+                break
                 
             if info['is_success'] or done:
                 break

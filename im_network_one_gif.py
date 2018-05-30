@@ -115,7 +115,8 @@ class BehaviorClone(object):
         for key in sorted(cfg['network']):
             com = cfg['network'][key]        #component
             if com['type'] in 'conv':
-                conv_out = Conv2D(conv_in, com['kernel_size'], com['out_channel'], name_prefix=key)
+                stride = com['stride']
+                conv_out = Conv2D(conv_in, com['kernel_size'], com['out_channel'], name_prefix=key, strides=[1, stride, stride, 1])
                 conv_in  = conv_out
                 if 'spatial_softmax' in com:
                     self.logger.debug('Last_conv.shape = {}'.format(conv_in.shape))
@@ -146,7 +147,7 @@ class BehaviorClone(object):
         for key in sorted(cfg['network']):
             com = cfg['network'][key]        #component
             if com['type'] in 'fc':
-                fc_out = FC(fc_input, com['size'], name_prefix=key, op='none')
+                fc_out = FC(fc_input, com['size'], name_prefix=key, op=com['activation'])
                 if self.drop_out:
                     fc_out = tf.nn.dropout(fc_out, 0.5)
                 fc_input = fc_out

@@ -9,8 +9,8 @@ network:
     im_conv_1: 
         type: 'conv'
         kernel_size: 3
-        out_channel: 128
-        stride: 2
+        out_channel: 64
+        stride: 1
     im_conv_2: 
         type: 'conv'
         kernel_size: 3
@@ -26,16 +26,23 @@ network:
         kernel_size: 3
         out_channel: 32
         stride: 2
+    im_conv_5: 
+        type: 'conv'
+        kernel_size: 3
+        out_channel: 32
+        stride: 2
         spatial_softmax:
     im_fc_1:
         type: 'fc'
-        size: 200
+        size: 256
         bias_transform: 20
         bias_transform_name: 'context'
+        activation: 'leaky_relu'
     im_fc_2:
         type: 'fc'
         size: 128
+        activation: 'leaky_relu'
     im_prediction:
         type: 'fc'
         size: 10
-    
+        activation: 

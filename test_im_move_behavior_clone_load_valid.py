@@ -26,7 +26,7 @@ def load_valid(dir):
 
 DEMO_TIMES = 10
 MODEL_CKPT_DIR = 'checkpoints/'
-_DATASET_DIR = './generation_data/train_data_diff_color_0523/'
+_DATASET_DIR = './generation_data/train_data_diff_color_0526/'
 _VALID_DATA = _DATASET_DIR + 'valid_data/object_0'
 
 GYM_PATH = gym.__path__[0]
@@ -85,14 +85,12 @@ with tf.Session() as sess:
                 rgb_obs = env.sim.render(width=128, height=128, camera_name="external_camera_0", depth=False,
                     mode='offscreen', device_id=-1)
    
-            traject = feedback[step, :14]
-            fb_log.debug('ee {} joints {} past {}'.format(traject[:3], traject[3:10], traject[10:]))
-
+            traject = feedback[step, :11]
             traject = traject[np.newaxis, :]
 
             rgb_obs = gif_pic
             rgb_obs = np.array(rgb_obs, dtype=np.float32)
-            rgb_obs -= np.array([123.68, 103.939, 116.779])
+            rgb_obs -= np.array([162.4602994276193, 179.77208175703808, 174.63593676080725])
             rgb_obs /= 255.
 
             rgb_obs = rgb_obs[np.newaxis, :]
@@ -100,7 +98,7 @@ with tf.Session() as sess:
             
             predict = np.squeeze(predict)
             actions = np.append(predict[:3], predict[3:4])
-            fb_log.debug('ee {} g {}'.format(actions[:3], actions[3:]))
+            
             # print(actions)
             obs, r, done, info = env.step(actions)
             total_reward += r

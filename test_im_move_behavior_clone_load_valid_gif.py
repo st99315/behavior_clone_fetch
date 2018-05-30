@@ -26,7 +26,7 @@ def load_valid(dir):
 
 DEMO_TIMES = 10
 MODEL_CKPT_DIR = 'checkpoints/'
-_DATASET_DIR = './generation_data/train_data_diff_color_0523/'
+_DATASET_DIR = './generation_data/train_data_diff_color_0526/'
 _VALID_DATA = _DATASET_DIR + 'valid_data/object_0'
 
 GYM_PATH = gym.__path__[0]
@@ -78,7 +78,6 @@ with tf.Session() as sess:
         total_reward = 0
         upper = 0
         
-        actions = np.array([0., 0., 0., 1.])
         for step, gif_pic in enumerate(gif_pics):
             if args.display:
                 env.render()
@@ -87,14 +86,13 @@ with tf.Session() as sess:
                     mode='offscreen', device_id=-1)
    
             traject = np.append(obs['eeinfo'][0], obs['weneed'])
-            traject = np.append(traject, actions)
-            fb_log.debug('ee {} joints {} past {}'.format(traject[:3], traject[3:10], traject[10:]))
+            traject = np.append(traject, obs['gripper_dense'])
 
             traject = traject[np.newaxis, :]
 
             rgb_obs = gif_pic
             rgb_obs = np.array(rgb_obs, dtype=np.float32)
-            rgb_obs -= np.array([123.68, 103.939, 116.779])
+            rgb_obs -= np.array([162.4602994276193, 179.77208175703808, 174.63593676080725])
             rgb_obs /= 255.
 
             rgb_obs = rgb_obs[np.newaxis, :]
@@ -102,7 +100,7 @@ with tf.Session() as sess:
             
             predict = np.squeeze(predict)
             actions = np.append(predict[:3], predict[3:4])
-            fb_log.debug('ee {} g {}'.format(actions[:3], actions[3:]))
+            actions *= 4.
 
             obs, r, done, info = env.step(actions)
             total_reward += r
@@ -119,11 +117,11 @@ with tf.Session() as sess:
                 plt.show(block=False)
                 plt.pause(0.001)
 
-            if (not upper and 
-                goal_distance(obs['eeinfo'][0][:2], obs['achieved_goal'][:2]) < 0.05 and
-                obs['eeinfo'][0][-1] > obs['achieved_goal'][-1] + .01):
-                upper = 1
-                break
+            # if (not upper and 
+            #     goal_distance(obs['eeinfo'][0][:2], obs['achieved_goal'][:2]) < 0.05 and
+            #     obs['eeinfo'][0][-1] > obs['achieved_goal'][-1] + .01):
+            #     upper = 1
+            #     break
 
             if info['is_success'] or done:
                 break

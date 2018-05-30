@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # dataset directory
-DIRECTORY_SET="train_data_diff_color_0526"
+DIRECTORY_SET="train_data_diff_color_0527"
 # log directory
 DIRECTORY="train_data"
 
@@ -16,7 +16,7 @@ fi
 # if you don't use virtualenv, then comment it
 source $VIRTUALENV_PATH/bin/activate
 
-let "batch = 1000"
+let "batch = 800"
 for i in $(seq 10)
 do
     let "s = (i-1) * batch"
