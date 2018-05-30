@@ -71,16 +71,17 @@ def FC(x, fc_size=1024, name_prefix='fc', w=None, b=None, initializer='xavier', 
         w = weight_variable([num, fc_size],name= name_prefix + "_w", initializer=initializer) 
     if b == None:
         b = bias_variable([fc_size], name = name_prefix + '_b') 
-    
+
     if op is None:
-        activation = lambda x, y: x
+        activation = lambda x, name: x
     elif op == 'relu':
         activation = tf.nn.relu
     elif op == 'softmax':
         activation = tf.nn.softmax
+    elif op == 'leaky_relu':
+        activation = tf.nn.leaky_relu
     else:
         print('error op ==' + op)
         exit()
 
     return activation(tf.matmul(x, w) + b, name=name_prefix + "_{}".format(op))
-    
