@@ -100,11 +100,11 @@ with tf.Session() as sess:
                 plt.show(block=False)
                 plt.pause(0.001)
 
-            if (not upper and 
-                goal_distance(obs['eeinfo'][0][:2], obs['achieved_goal'][:2]) < 0.05 and
-                obs['eeinfo'][0][-1] > obs['achieved_goal'][-1] + .01):
-                upper = 1
-                break
+            # if (not upper and 
+            #     goal_distance(obs['eeinfo'][0][:2], obs['achieved_goal'][:2]) < 0.05 and
+            #     obs['eeinfo'][0][-1] > obs['achieved_goal'][-1] + .01):
+            #     upper = 1
+            #     break
                 
             if info['is_success'] or done:
                 break

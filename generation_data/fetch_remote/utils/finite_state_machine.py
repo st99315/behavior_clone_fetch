@@ -152,6 +152,7 @@ if __name__ == '__main__':
         simple_policy = FSM(np.append(obs['eeinfo'][0], g), obs['achieved_goal'], goal, LIMIT_Z)
         total_reward = 0
 
+        step = 0
         while not simple_policy.done:
             x, y, z, g = simple_policy.execute()
             # scale up action
@@ -160,19 +161,25 @@ if __name__ == '__main__':
             # update robot state
             simple_policy.robot_state = np.append(obs['eeinfo'][0], g)
             
+            step += 1
             total_reward += r
 
             if args.display:
                 env.render()
-            else:
-                rgb_obs = env.sim.render(width=200, height=200, camera_name="external_camera_0", depth=False,
+            elif step % 20 == 0:
+                rgb_obs = env.sim.render(width=256, height=256, camera_name="external_camera_0", depth=False,
                     mode='offscreen', device_id=-1)
+                rgb_obs1 = env.sim.render(width=256, height=256, camera_name="gripper_camera_rgb", depth=False,
+                    mode='offscreen', device_id=-1)
+                plt.figure(1)
+                plt.imshow(rgb_obs)
+                plt.figure(2)
+                plt.imshow(rgb_obs1)
+                plt.show(block=False)
+                plt.pause(0.001)
 
             if info['is_success'] or done:
+                print('done')
                 break
-
-        plt.imshow(rgb_obs)
-        plt.show(block=False)
-        plt.pause(0.001)
 
         print(i, "total reward %0.2f" % total_reward)
