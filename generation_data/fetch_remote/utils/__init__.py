@@ -19,6 +19,7 @@ def get_args():
     parser.add_argument("-si",  dest='start',   help="Start of Number",                 type=int,  default=0)
     parser.add_argument("-ei",  dest='end',     help="End of Number",                   type=int,  default=10)
     parser.add_argument("-r",   dest='random',  help="Random light and object texture", type=bool, default=False)
+    parser.add_argument("-ext", dest='extra',   help="Get extra image that cam of ee",  type=bool, default=False)
     args = parser.parse_args()
     print('All argument:', args)
     return args

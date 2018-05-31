@@ -24,6 +24,7 @@ LIMIT_Z = .415
 SCALE_SPEED = 4.0
 # desired image size
 IMG_SIZE = 256
+EXT_SIZE = 128
 GYM_PATH = gym.__path__[0]
 XML_DIR = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs')
 
@@ -59,6 +60,12 @@ for noenv, env_name in enumerate(env_xmls):
                     mode='offscreen', device_id=-1)
                 # appending image to saver
                 saver.append(image=rgb_obs)
+
+                if args.extra:
+                    ext_obs = env.sim.render(width=EXT_SIZE, height=EXT_SIZE, camera_name="gripper_camera_rgb", depth=False,
+                        mode='offscreen', device_id=-1)
+                    # appending image to saver
+                    saver.append(extra_img=ext_obs)
     
             # appending current feedback: ee pos (x, y, z), all of robot joints angle and gripper state
             trajectory = np.append(obs['eeinfo'][0], obs['weneed'])
