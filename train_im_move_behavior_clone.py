@@ -15,7 +15,7 @@ from utils import print_all_var, recreate_dir
 from utils import set_logger, show_use_time
 
 
-_DATASET_DIR = './generation_data/train_data_diff_color_0526/'
+_DATASET_DIR = './generation_data/train_data_diff_color_0531/'
 _TRAIN_DATA = _DATASET_DIR + 'train_data'
 _VALID_DATA = _DATASET_DIR + 'valid_data'
 
@@ -63,6 +63,7 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
             if training:
                 _, total_im_loss, predict = sess.run([model.train_op, model.total_im_loss, model.batch_prediction], 
                     feed_dict={is_training: training})
+                
             else:
                 total_im_loss, predict = sess.run([model.total_im_loss, model.batch_prediction],
                     feed_dict={is_training: training}) 
@@ -105,17 +106,17 @@ def valid_batch(*arg, **kwargs):
 logger.info('Start Logging')
 # Data Loader
 DataLoader.set_logger(build_logger)
-train_dlr = DataLoader(_TRAIN_DATA, img_size=cfg['image_height'])
-valid_dlr = DataLoader(_VALID_DATA, img_size=cfg['image_height'])
+train_dlr = DataLoader(_TRAIN_DATA)
+valid_dlr = DataLoader(_VALID_DATA)
 
 train_data = train_dlr.input_pipeline()
 valid_data = valid_dlr.input_pipeline()
 is_training = tf.placeholder(dtype=bool,shape=())
-gif, fdb, cmd, _ = tf.cond(is_training, lambda:(train_data), lambda:(valid_data))
+gif, ext, fdb, cmd = tf.cond(is_training, lambda:(train_data), lambda:(valid_data))
 
 m = BehaviorClone(logger=build_logger)
 m.set_network_property(drop_out=FLAGS.drop_out)
-m.build_inputs_and_outputs(tf.squeeze(gif), tf.squeeze(fdb), tf.squeeze(cmd))
+m.build_inputs_and_outputs(tf.squeeze(gif), tf.squeeze(ext), tf.squeeze(fdb), tf.squeeze(cmd))
 m.build_train_op()
 
 build_logger.info('--------- After build graph, get_trainable_dic() ------------')

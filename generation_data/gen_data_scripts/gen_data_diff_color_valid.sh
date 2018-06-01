@@ -16,7 +16,7 @@ fi
 # if you don't use virtualenv, then comment it
 source $VIRTUALENV_PATH/bin/activate
 
-let "batch = 10"
+let "batch = 40"
 for i in $(seq 10)
 do
     let "s = (i-1) * batch"

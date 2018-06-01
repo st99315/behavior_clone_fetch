@@ -9,7 +9,7 @@ class FSM:
     _PREGRIP_HEIGHT = 0.1
     fsm_state = ('idle', 'go_obj', 'down', 'grip', 'up', 'go_goal')
 
-    def __init__(self, robot_state, obj_pos, goal_pos, limit_z=.415, step=50, skip_step=5):
+    def __init__(self, robot_state, obj_pos, goal_pos, limit_z=.415, step=50, skip_step=2):
         self.state = self.fsm_state[0]
         self.next_state = self.state
         # every task costs steps

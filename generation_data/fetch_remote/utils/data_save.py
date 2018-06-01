@@ -87,7 +87,7 @@ class DataSaver:
                 and clear buffer
             epsoide is int variable
          '''
-        self._save_gif(self._images,       '{}.gif'.format(epsoide),   clip)
+        self._save_gif(self._images,       '{}-g.gif'.format(epsoide),   clip)
         self._save_gif(self._extra_images, '{}-e.gif'.format(epsoide), clip)
         self._save_tra('{}.csv'.format(epsoide), clip)
         self._save_slc(epsoide)
