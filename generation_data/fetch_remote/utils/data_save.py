@@ -41,12 +41,12 @@ class DataSaver:
 
     def _save_gif(self, img_buffer, file_name, clip):
         if not len(img_buffer):   return
-        imgs = img_buffer[clip[0]: clip[1]]
+        imgs = img_buffer.copy()[clip[0]: clip[1]]
         path = os.path.join(self.dir, file_name)
         imageio.mimsave(path, imgs)
         # set path
         if img_buffer is self._images:
-            self.gif_path  = path
+            self.gif_path = path
         else:
             self.ext_path = path
     
@@ -87,10 +87,10 @@ class DataSaver:
                 and clear buffer
             epsoide is int variable
          '''
-        self._save_gif(self._images,       '{}-g.gif'.format(epsoide),   clip)
+        self._save_gif(self._images,       '{}-g.gif'.format(epsoide), clip)
         self._save_gif(self._extra_images, '{}-e.gif'.format(epsoide), clip)
         self._save_tra('{}.csv'.format(epsoide), clip)
-        self._save_slc(epsoide)
+        # self._save_slc(epsoide)
         self.flush()
 
     def flush(self):

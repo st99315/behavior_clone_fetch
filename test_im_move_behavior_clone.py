@@ -69,6 +69,8 @@ with tf.Session() as sess:
             else:
                 rgb_obs = env.sim.render(width=cfg['image_width'], height=cfg['image_height'], camera_name="external_camera_0", depth=False,
                     mode='offscreen', device_id=-1)
+                rgb_obs1 = env.sim.render(width=cfg['extra_width'], height=cfg['extra_height'], camera_name="gripper_camera_rgb", depth=False,
+                    mode='offscreen', device_id=-1)
             
             traject = np.append(obs['eeinfo'][0], obs['weneed'])
             traject = np.append(traject, obs['gripper_dense'])
@@ -78,8 +80,13 @@ with tf.Session() as sess:
             rgb_obs -= GIF_MEAN
             rgb_obs /= 255.
 
+            rgb_obs1 = np.array(rgb_obs1, dtype=np.float32)
+            rgb_obs1 -= GIF_MEAN
+            rgb_obs1 /= 255.
+
             rgb_obs = rgb_obs[np.newaxis, :]
-            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_obs, m.batch_feedback: traject})
+            rgb_obs1 = rgb_obs1[np.newaxis, :]
+            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_obs, m.batch_ext: rgb_obs1, m.batch_feedback: traject})
             
             predict = np.squeeze(predict)
             actions = np.append(predict[:3], predict[3:4])
@@ -88,15 +95,15 @@ with tf.Session() as sess:
             obs, r, done, info = env.step(actions)
             total_reward += r
 
-            if step % 20 == 0:
+            if step % 10 == 0:
                 rgb_obs = env.sim.render(width=200, height=200, camera_name="external_camera_0", depth=False,
                     mode='offscreen', device_id=-1)
-                # rgb_obs1 = env.sim.render(width=200, height=200, camera_name="external_camera_1", depth=False,
-                #     mode='offscreen', device_id=-1)
-                # plt.figure(1)
+                ext_obs = env.sim.render(width=200, height=200, camera_name="gripper_camera_rgb", depth=False,
+                    mode='offscreen', device_id=-1)
+                plt.figure(1)
                 plt.imshow(rgb_obs)
-                # # plt.figure(2)
-                # # plt.imshow(rgb_obs1)
+                plt.figure(2)
+                plt.imshow(ext_obs)
                 plt.show(block=False)
                 plt.pause(0.001)
 

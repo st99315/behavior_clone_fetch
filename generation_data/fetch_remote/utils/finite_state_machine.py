@@ -1,7 +1,7 @@
 """
     A Simple Policy for Grasp Object using Fetch Robot
 """
-
+import math
 from gym.envs.robotics.fetch_env import goal_distance
 
 class FSM:
@@ -9,7 +9,7 @@ class FSM:
     _PREGRIP_HEIGHT = 0.1
     fsm_state = ('idle', 'go_obj', 'down', 'grip', 'up', 'go_goal')
 
-    def __init__(self, robot_state, obj_pos, goal_pos, limit_z=.415, step=50, skip_step=2):
+    def __init__(self, robot_state, obj_pos, goal_pos, limit_z=.415, step=60, skip_step=3):
         self.state = self.fsm_state[0]
         self.next_state = self.state
         # every task costs steps
@@ -17,6 +17,8 @@ class FSM:
         self._step = 0
         self.maxstep = step
         self._done = False
+        self.past_gs = None
+        self._robot_state = None
         self.robot_state = robot_state
         self.obj_pos = obj_pos.copy()
         self.goal_pos = goal_pos.copy()
@@ -40,8 +42,10 @@ class FSM:
     @robot_state.setter
     def robot_state(self, robot_state):
         assert robot_state.shape == (4,)
+        if self._robot_state is not None:
+            self.past_gs = self._robot_state[-1]
         self._robot_state = robot_state.copy()
-
+        
     def execute(self):
         x, y, z, g = 0., 0., 0., 0
 
@@ -93,23 +97,26 @@ class FSM:
             if self._step < self.skip_step:
                 return
         if self.state == 'go_obj':
-            if goal_distance(self.robot_state[:2], self.obj_pos[:2]) > self._DIS_ERROR:
+            if goal_distance(self.robot_state[:2], self.obj_pos[:2]) > self._DIS_ERROR * 2:
                 return
         elif self.state == 'down':
             if (goal_distance(self.robot_state[:2], self.obj_pos[:2]) > self._DIS_ERROR
-                or self.robot_state[2] > self.obj_pos[2] + self._DIS_ERROR/2.0
-                or self.robot_state[2] < self.obj_pos[2] - self._DIS_ERROR/2.0):
+                or self.robot_state[2] > self.obj_pos[2] + self._DIS_ERROR/2.0):
                 return
         elif self.state == 'up':
-            if goal_distance(self.robot_state[:3], self.tar_pos) > self._DIS_ERROR:
+            if (goal_distance(self.robot_state[:2], self.tar_pos[:2]) > self._DIS_ERROR * 2
+                or self.robot_state[2] < self.tar_pos[2] - self._DIS_ERROR/2.0):
                 return
         # Done!!!
         elif self.state == 'go_goal':
-            if goal_distance(self.robot_state[:3], self.goal_pos) > self._DIS_ERROR:
+            if goal_distance(self.robot_state[:3], self.goal_pos) > self._DIS_ERROR * 3:
                 return
             self._done = True
         elif self.state == 'grip':
-            if self._step < self.skip_step or self.robot_state[-1] >= -.5:
+            # print(self._step, self.past_gs, self.robot_state[-1])
+            if (self._step < self.skip_step    or
+                self.robot_state[-1] >= 0.05 or 
+                self.past_gs - self.robot_state[-1] > self._DIS_ERROR/2.0):     
                 return
 
         self.state = self.next_state

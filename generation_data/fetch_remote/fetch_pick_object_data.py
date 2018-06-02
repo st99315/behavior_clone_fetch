@@ -42,13 +42,12 @@ for noenv, env_name in enumerate(env_xmls):
 
     for i in range(args.start, args.end):
         obs = env.reset(rand_text=args.random, rand_shadow=args.random)
-        g = GRIPPER_STATE
         # save object and goal pos
         tar_info.append(trajectory=np.append(obs['achieved_goal'], obs['desired_goal']))
 
         goal = obs['achieved_goal'].copy()
         goal[-1] = goal[-1] + .1
-        simple_policy = FSM(np.append(obs['eeinfo'][0], g), obs['achieved_goal'], goal, LIMIT_Z)
+        simple_policy = FSM(np.append(obs['eeinfo'][0], obs['gripper_dense']), obs['achieved_goal'], goal, LIMIT_Z)
         total_reward = 0
 
         a = np.array([0., 0., 0., 1.])
@@ -82,7 +81,7 @@ for noenv, env_name in enumerate(env_xmls):
 
             obs, r, done, info = env.step(a)
             # update robot state
-            simple_policy.robot_state = np.append(obs['eeinfo'][0], g)
+            simple_policy.robot_state = np.append(obs['eeinfo'][0], obs['gripper_dense'])
             total_reward += r
 
             # appending auxiliary: object and gripper pos

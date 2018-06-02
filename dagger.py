@@ -25,7 +25,7 @@ import load_data
 
 
 CKPT_DIR = 'checkpoints/'
-DATASET_DIR = './generation_data/train_data_diff_color_0526/train_data'
+DATASET_DIR = './generation_data/train_data_diff_color_0531/train_data'
 
 MAX_EPSO = 1000
 MAX_STEP = 300
@@ -93,7 +93,7 @@ with tf.Session() as sess:
         goal = obs['achieved_goal'].copy()
         goal[-1] = goal[-1] + .1
         # current feedback, object pos, goal pos
-        simple_policy = FSM(np.append(obs['eeinfo'][0], GRIPPER_STATE), obs['achieved_goal'], goal)
+        simple_policy = FSM(np.append(obs['eeinfo'][0], obs['gripper_dense']), obs['achieved_goal'], goal)
         total_reward = 0
         clip = (0, None)
 
@@ -104,19 +104,28 @@ with tf.Session() as sess:
             # appending image to saver
             saver.append(image=rgb_obs)
 
+            ext_obs = env.sim.render(width=cfg['extra_width'], height=cfg['extra_width'], camera_name="gripper_camera_rgb", depth=False,
+                mode='offscreen', device_id=-1)
+            # appending image to saver
+            saver.append(extra_img=ext_obs)
+
             # prepocessing
             rgb_img = np.array(rgb_obs, dtype=np.float32)
             rgb_img -= GIF_MEAN
             rgb_img /= 255.
+            ext_obs = np.array(ext_obs, dtype=np.float32)
+            ext_obs -= GIF_MEAN
+            ext_obs /= 255.
             rgb_img = rgb_img[np.newaxis, :]
+            ext_obs = ext_obs[np.newaxis, :]
 
             traject = np.append(obs['eeinfo'][0], obs['weneed'])
             traject = np.append(traject, obs['gripper_dense'])
             # appending current feedback: ee pos (x, y, z), all of robot joints angle and gripper state
             trajectory = traject.copy()
             traject = traject[np.newaxis, :]
-
-            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_img, m.batch_feedback: traject})
+            
+            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_img, m.batch_ext: ext_obs, m.batch_feedback: traject})
             expert  = simple_policy.execute()
             # appending control command: delta ee pos (x, y, z), gripper state
             trajectory = np.append(trajectory, expert)
@@ -130,7 +139,7 @@ with tf.Session() as sess:
             obs, r, done, info = env.step(actions)
 
             # update robot state
-            simple_policy.robot_state = np.append(obs['eeinfo'][0], g)
+            simple_policy.robot_state = np.append(obs['eeinfo'][0], obs['gripper_dense'])
             total_reward += r
 
             # appending auxiliary: object and gripper pos
