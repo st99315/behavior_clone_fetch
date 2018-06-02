@@ -1,4 +1,5 @@
 # Behavior Clone Fetch :metal:
+### Using imitation learning let Fetch robot to learn a policy of grasping in Gym
 
 - [x] All scripts are run on Python3
 - [ ] Python2 not tried
@@ -28,12 +29,17 @@ pip install -e .
 
 ### Training Network
 ```bash
-python train_im_move_behavior_clone.py
+python train_im_behavior_clone.py
 ```
 
 ### Testing Network
 ```bash
-python test_im_move_behavior_clone.py
+python test_im_behavior_clone.py
+```
+
+### Data Aggregation
+```bash
+python dagger.py
 ```
 
 ## Using Virtualenv

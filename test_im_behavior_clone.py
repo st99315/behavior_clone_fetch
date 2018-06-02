@@ -19,9 +19,7 @@ import load_data
 
 
 CKPT_DIR = 'checkpoints/'
-DATASET_DIR = './generation_data/train_data_diff_color_0526/train_data'
-YAM_FILE = DATASET_DIR.rpartition('/')[-1]+'.yaml'
-GIF_MEAN = load_data.get_gifs_mean(os.path.join(DATASET_DIR, YAM_FILE))
+GIF_MEAN = load_data.get_gifs_mean('')
 DEMO_TIMES = 10
 
 GYM_PATH = gym.__path__[0]
