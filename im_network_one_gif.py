@@ -154,13 +154,6 @@ class BehaviorClone(object):
 
     def build_network(self, gif_pics):
 		#-----------------Imitation Network-----------------#
-        # define placeholder for inputs to network
-        # x_image, ys= inp
-        # print('inp = ' + str(inp))
-        # print('before reshape -> gif_pics.shape = ' + str(gif_pics.shape))
-        # print('before reshape -> ys.shape = ' + str(gif_actions.shape))
-        # x_image = tf.placeholder(tf.float32, [None, 240, 240, 3], name='im_image') 
-        # ys = tf.placeholder(tf.float32, [None, 2], name='im_pos')
         gif_len  = self.pics_each_gif if self.pics_each_gif  is not None else -1
         gif_pic, ext_pic = gif_pics
 
@@ -232,7 +225,7 @@ class BehaviorClone(object):
             # print('gif_loss.shape',gif_loss.shape)
         return [gif_prediction, gif_loss]
 
-    def build_inputs_and_outputs(self, gif=None, ext=None, fdb=None, cmd=None): #, batch_gif_tensor):
+    def build_inputs_and_outputs(self, gif=None, ext=None, fdb=None, cmd=None):
         self.logger.debug('Start ---------- build_inputs_and_outputs() -----------')
         batch_gif_shape = [self.batch_size, self.pics_each_gif, self.img_h, self.img_w, self.img_d]
         batch_ext_shape = [self.batch_size, self.pics_each_gif, self.ext_h, self.ext_w, self.img_d]
@@ -251,10 +244,8 @@ class BehaviorClone(object):
 
         self.batch_prediction, self.batch_loss = self.batch_result
         self.total_im_loss = tf.reduce_mean(self.batch_loss)
-        # self.total_im_loss = tf.reduce_sum(self.batch_loss)
 
         self.logger.debug('total_im_loss = {}'.format(self.total_im_loss))
-        # self.batch_prediction, self.batch_loss
         # print('self.batch_prediction.shape',self.batch_prediction.shape)
         # print('self.batch_loss.shape',self.batch_loss.shape)
         # print('self.batch_result.shape',np.array(self.batch_result).shape)

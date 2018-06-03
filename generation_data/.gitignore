@@ -11,6 +11,6 @@ MUJOCO_LOG.TXT
 *.yaml
 
 *.zip
-*.ipynb
 *.tfrecords
 
+*-checkpoint.ipynb

@@ -264,7 +264,7 @@ class DataLoaderTFRecord(DataLoader):
         _, serialized_example = reader.read(filename_queue)
 
         # make features dict
-        features={}
+        features = {}
         for i in range(slice_num):
             features['external_{}'.format(i)] = tf.FixedLenFeature([], tf.string)
             features['eye_hand_{}'.format(i)] = tf.FixedLenFeature([], tf.string)
