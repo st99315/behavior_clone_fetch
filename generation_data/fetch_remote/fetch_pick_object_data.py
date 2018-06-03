@@ -23,8 +23,8 @@ GRIPPER_STATE = 1
 LIMIT_Z = .415
 SCALE_SPEED = 4.0
 # desired image size
-IMG_SIZE = 256
-EXT_SIZE = 128
+IMG_SIZE = 240
+EXT_SIZE = 120
 GYM_PATH = gym.__path__[0]
 XML_DIR = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs')
 
@@ -39,9 +39,10 @@ for noenv, env_name in enumerate(env_xmls):
     data_save_path = os.path.join(args.dir, 'object_{}'.format(noenv))
     saver    = DataSaver(data_save_path)
     tar_info = DataSaver(os.path.join(data_save_path, 'target'), info=True)
+    saver.open_tf_writer()
 
     for i in range(args.start, args.end):
-        obs = env.reset(rand_text=args.random, rand_shadow=args.random)
+        obs = env.reset(rand_text=args.random, rand_shadow=args.random, rand_cam=args.random)
         # save object and goal pos
         tar_info.append(trajectory=np.append(obs['achieved_goal'], obs['desired_goal']))
 
@@ -103,3 +104,5 @@ for noenv, env_name in enumerate(env_xmls):
     
     # for run only one env
     break
+
+saver.close_tf_writer()

@@ -5,6 +5,8 @@
 import os
 import imageio
 import numpy as np
+import tensorflow as tf
+from copy import deepcopy as dcopy
 
 
 def check_dir(dir):
@@ -33,17 +35,17 @@ class DataSaver:
 
     def append(self, image=None, extra_img=None, trajectory=None):
         if image is not None:
-            self._images.append(image)
+            self._images.append(dcopy(image))
         if extra_img is not None:
-            self._extra_images.append(extra_img)
+            self._extra_images.append(dcopy(extra_img))
         if trajectory is not None:
-            self._trajectories.append(trajectory)
+            self._trajectories.append(dcopy(trajectory))
 
     def _save_gif(self, img_buffer, file_name, clip):
         if not len(img_buffer):   return
-        imgs = img_buffer.copy()[clip[0]: clip[1]]
+        imgs = img_buffer[clip[0]: clip[1]]
         path = os.path.join(self.dir, file_name)
-        imageio.mimsave(path, imgs)
+        imageio.mimsave(path, imgs, format='GIF-PIL')
         # set path
         if img_buffer is self._images:
             self.gif_path = path
@@ -91,6 +93,7 @@ class DataSaver:
         self._save_gif(self._extra_images, '{}-e.gif'.format(epsoide), clip)
         self._save_tra('{}.csv'.format(epsoide), clip)
         # self._save_slc(epsoide)
+        self.record_data(epsoide)
         self.flush()
 
     def flush(self):
@@ -98,3 +101,49 @@ class DataSaver:
         self._images = []
         self._extra_images = []
         self._trajectories = []
+
+    def open_tf_writer(self):
+        self.pattern = 0
+        rcfilename = os.path.join(self.dir, 'data1.tfrecords')
+        # 設定以 gzip 壓縮
+        compression = tf.python_io.TFRecordCompressionType.GZIP
+        self.writer = tf.python_io.TFRecordWriter(rcfilename,
+            options=tf.python_io.TFRecordOptions(compression))
+        # self.writer = tf.python_io.TFRecordWriter(rcfilename)
+
+    def close_tf_writer(self):
+        print('dataset total pattern', self.pattern)
+        self.writer.close()
+
+    def record_data(self, epsoide, slice_num=4):
+        gif_len, tra_len = len(self._images), len(self._trajectories)
+        if (gif_len != tra_len) or not (gif_len and tra_len):   return
+
+        total = gif_len - slice_num + 1
+        index = [(i, i+4) for i in range(total)]
+
+        gif = np.array(self._images,       dtype=np.float32)
+        ext = np.array(self._extra_images, dtype=np.float32)
+        csv = np.array(self._trajectories, dtype=np.float32)
+
+        def byte_feature(value):
+            return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+        def float_feature(value):
+            return tf.train.Feature(float_list=tf.train.FloatList(value=value))
+
+        for si, ei in index:
+            gifslice = gif[si:ei]
+            extslice = ext[si:ei]
+            csvslice = csv[si:ei]
+
+            # make feature
+            feature = {}
+            for i in range(slice_num):
+                feature["external_{}".format(i)] = byte_feature(value=tf.compat.as_bytes(gifslice[i].tostring()))
+                feature["eye_hand_{}".format(i)] = byte_feature(value=tf.compat.as_bytes(extslice[i].tostring()))
+                feature["fdb_cmd_{}".format(i)] = float_feature(value=csvslice[i].flatten())
+
+            # unit batch data
+            example = tf.train.Example(features=tf.train.Features(feature=feature))
+            self.writer.write(example.SerializeToString())
+            self.pattern += 1

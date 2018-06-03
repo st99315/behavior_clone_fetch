@@ -175,86 +175,120 @@ class DataLoader:
         return DataLoader._coord.should_stop()
 
 
-class DataLoaderTwo(DataLoader):
+class DataLoaderTFRecord(DataLoader):
+    _NUM_THREAD = 2
+
     def __init__(self, directory, load_num=None):
         self.initial(directory, load_num)
 
-    def initial(self, directory, load_num=None):
-        data_csvs = self.get_all_datalines(directory, shuffle=True, size=load_num)
-        self.data_num = len(data_csvs)
+    def initial(self, directory):
+        all_tfrecords = self.get_all_filenames(directory, shuffle=True)
+        dataset_num = len(all_tfrecords)
 
-        DataLoader._logger.info('All Csv files: {}'.format(self.data_num))
+        # TODO: count all data num
+        self.data_num = self.count_all_pattern()
+
+        DataLoader._logger.info('All TFRecord files: {}'.format(dataset_num))
+        DataLoader._logger.info('All patterns: {}'.format(self.data_num))
+
         assert self.data_num is not 0, DataLoader._logger.error('No data loaded!')
+        self.load_network_parameter()
+        self.all_tfrecords = tf.convert_to_tensor(all_tfrecords)
+
+    def load_network_parameter(self):
+        self.cfg = config.cfg
+        self.batch_size = self.cfg['batch_size']
+        self.img_w = self.cfg['image_width']
+        self.img_h = self.cfg['image_height']
+        self.ext_w = self.cfg['extra_width']
+        self.ext_h = self.cfg['extra_height']
+        self.img_depth = self.cfg['image_depth']
+        self.fdb_len = self.cfg['robot_configuration_num']
+
+    def count_all_pattern(self):
+        self.compression = tf.python_io.TFRecordCompressionType.GZIP
+        record_iterator = tf.python_io.tf_record_iterator(path=self.all_tfrecords,
+                options=tf.python_io.TFRecordOptions(self.compression))
+        count = 0
+        for string_record in record_iterator:
+            count += 1
+        return count
+
+    def get_all_filenames(self, dir, shuffle=False, size=None):
+        # finf all of folder
+        folders = glob.glob(os.path.join(dir, 'object*'))
+        # get all of gifs
+        tfrecords = []
+        for folder in folders:
+            tfrecords.append(glob.glob(os.path.join(folder, '*.tfrecords')))
+        tfrecords = np.concatenate(tfrecords)
+        # shuffle list
+        if shuffle: random.shuffle(tfrecords)
+        return tfrecords
+
+    def decode_features(features, slice_num=4):
+        # convert to my structure
+        giflist, extlist, csvlist = [], [], []
+        for i in range(slice_num):
+            gif = tf.decode_raw(features['external_{}'.format(i)], tf.float32)
+            gif = tf.reshape(gif, [self.img_w, self.img_h, self.img_depth])
+            ext = tf.decode_raw(features['eye_hand_{}'.format(i)], tf.float32)
+            ext = tf.reshape(ext, [self.ext_w, self.ext_h, self.img_depth])
+            csv = tf.sparse_tensor_to_dense(features['fdb_cmd_{}'.format(i)])
+            csv = tf.reshape(csv, (self._CSV_COLS,))
+            giflist.append(gif)
+            extlist.append(ext)
+            csvlist.append(csv)
         
-        self.data_csvs = tf.convert_to_tensor(data_csvs)
-        self.get_mean(directory)
+        gifs = tf.stack(giflist, axis=0)
+        exts = tf.stack(extlist, axis=0)
+        csvs = tf.stack(csvlist, axis=0)
+        return gifs, exts, csvs
 
-    def get_all_datalines(self, dir, shuffle=False, size=None):
-        # finf all of csv for data pairs
-        data_csvs = glob.glob(os.path.join(dir, 'object*.csv'))
-        return data_csvs[:size]
-
-    def _read_gif_format(self, filename_queue, clip):
-        reader = tf.WholeFileReader()
-        key, value = reader.read(filename_queue)
-        images = tf.image.decode_gif(value)
-        # slice images to range
-        images = images[clip[0]:clip[1], ...]
-        images = self._image_preprosess(images)
-        return key, images
-
-    def _read_csv_format(self, filename_queue, clip):
-        reader = tf.TextLineReader(skip_header_lines=self._HEAD_LINE)
-        key, value = reader.read_up_to(filename_queue, self._MAX_LEN)
-        record_defaults = [[0.] for i in range(self._CSV_COLS)]
-        features = tf.decode_csv(value, record_defaults=record_defaults,
-            field_delim=' ')
-        # transpose tensor
-        features = tf.transpose(features, [1, 0])
-        # slice features to feedback and command
-        feedback_num = config.cfg['robot_configuration_num']
-        key = key[clip[0]:clip[1]]
-        fdb = features[clip[0]:clip[1], ..., :feedback_num]
-        cmd = features[clip[0]:clip[1], ..., feedback_num:]
-        return key, fdb, cmd
-    
-    def get_queue(self, num_epochs=1):
-        meta_queue = tf.train.string_input_producer(self.data_csvs, num_epochs=num_epochs, shuffle=False)
-        return meta_queue
-
-    def input_pipeline(self, meta_queue, batch_size=32):
-        min_after_dequeue = 16
+    def input_pipeline(self, batch_size=None, num_epochs=None, slice_num=4):
+        # non spec then using config
+        batch_size = self.batch_size if batch_size is None else batch_size
         # capacity 一定要比 min_after_dequeue 更大一些，
         # 多出來的部分可用於預先載入資料，建議值為：
         # min_after_dequeue + (num_threads + a small safety margin) * batch_size
+        min_after_dequeue = 16
         capacity = min_after_dequeue + 3 * batch_size
 
-        # read meta csv
-        reader = tf.TextLineReader(skip_header_lines=self._HEAD_LINE)
-        key, value = reader.read(meta_queue)
-        record = [[0.], [0.], [""], [""], [""]]
-        datapairs = tf.decode_csv(value, record_defaults=record, field_delim=' ')
-    
-        # read gif
-        gif_queue = tf.train.string_input_producer([datapairs[2]], shuffle=False)
-        name, gif = self._read_gif_format(gif_queue, tf.cast(datapairs[:2], tf.int32))
-        gif.set_shape([4, 256, 256, 3])
-        
-        # read extra gif
-        ext_queue = tf.train.string_input_producer([datapairs[3]], shuffle=False)
-        name, ext = self._read_gif_format(ext_queue, tf.cast(datapairs[:2], tf.int32))
-        ext.set_shape([4, 128, 128, 3])
-        
-        # read trajectory csv
-        tra_queue = tf.train.string_input_producer([datapairs[-1]], shuffle=False)
-        _, fdb, cmd = self._read_csv_format(tra_queue, tf.cast(datapairs[:2], tf.int32))
-        fdb.set_shape([4, 11])
-        cmd.set_shape([4, 10])
+        filename_queue = tf.train.string_input_producer(
+                self.all_tfrecords, num_epochs=num_epochs)
 
-        batch_batch = [gif, ext, fdb, cmd, name]
-        # batch_batch = tf.train.shuffle_batch(
-        #     [gif, ext, fdb, cmd, name], batch_size, capacity=capacity, min_after_dequeue=min_after_dequeue)
-        return batch_batch
+        reader = tf.TFRecordReader(options=tf.python_io.TFRecordOptions(
+                self.compression))
+
+        # read data of tfrecords fom filename queue
+        _, serialized_example = reader.read(filename_queue)
+
+        # make features dict
+        features={}
+        for i in range(slice_num):
+            features['external_{}'.format(i)] = tf.FixedLenFeature([], tf.string)
+            features['eye_hand_{}'.format(i)] = tf.FixedLenFeature([], tf.string)
+            features['fdb_cmd_{}'.format(i)] = tf.VarLenFeature(tf.float32)
+            
+        # read a example
+        features = tf.parse_single_example(serialized_example,
+            features=features)
+        gifs, exts, csvs = decode_features(features, slice_num)
+    
+        # preprocessing
+        gifs = gifs / 255.
+        exts = exts / 255.
+        fdbs = csvs[..., :fdb_len]
+        cmds = csvs[..., fdb_len:]
+
+        # 打散資料順序
+        batch_data = tf.train.shuffle_batch(
+            [gifs, exts, fdbs, cmds],
+            batch_size=batch_szie,
+            capacity=capacity,
+            num_threads=self._NUM_THREAD,
+            min_after_dequeue=min_after_dequeue)
+        return batch_data
 
 
 def _exe_tfop(sess, dlr, tfop, is_training, train):
