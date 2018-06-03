@@ -13,13 +13,13 @@ def set_env_variable(display):
 
 def get_args():
     parser = ArgumentParser()
-    parser.add_argument("-d",   dest='display', help="True is Using Default GUI",       type=bool, default=False)
-    parser.add_argument("-s",   dest='save',    help="True is Saving data",             type=bool, default=False)
+    parser.add_argument("-d",   dest='display', help="True is Using Default GUI",       default=False, action='store_true')
+    parser.add_argument("-s",   dest='save',    help="True is Saving data",             default=False, action='store_true')
     parser.add_argument("-dir", dest='dir',     help="Directory for Saving Data",       type=str,  default='./train_data')
     parser.add_argument("-si",  dest='start',   help="Start of Number",                 type=int,  default=0)
     parser.add_argument("-ei",  dest='end',     help="End of Number",                   type=int,  default=10)
-    parser.add_argument("-r",   dest='random',  help="Random light and object texture", type=bool, default=False)
-    parser.add_argument("-ext", dest='extra',   help="Get extra image that cam of ee",  type=bool, default=False)
+    parser.add_argument("-r",   dest='random',  help="Random light and object texture", default=False, action='store_true')
+    parser.add_argument("-ext", dest='extra',   help="Get extra image that cam of ee",  default=False, action='store_true')
     args = parser.parse_args()
     print('All argument:', args)
     return args

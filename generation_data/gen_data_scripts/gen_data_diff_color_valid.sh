@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # dataset directory
-DIRECTORY_SET="train_data_diff_color_0532"
+DIRECTORY_SET="train_data_diff_color_0603"
 # log directory
 DIRECTORY="valid_data"
  
@@ -16,13 +16,13 @@ fi
 # if you don't use virtualenv, then comment it
 source $VIRTUALENV_PATH/bin/activate
 
-let "batch = 50"
+let "batch = 100"
 for i in $(seq 10)
 do
     let "s = (i-1) * batch"
     let "e = i * batch"
    
-    python ../fetch_remote/fetch_pick_object_data.py -si $s -ei $e -ext True -r True -s True -dir ../$DIRECTORY_SET/valid_data > $DIRECTORY/gen_$s_$e.log 2>&1 &
+    python ../fetch_remote/fetch_pick_object_data.py -si $s -ei $e -ext -r -s -dir ../$DIRECTORY_SET/valid_data > $DIRECTORY/gen_$s_$e.log 2>&1 &
 
     # try following in ssh or docker
     #xvfb-run -a -s "-screen 0 1400x900x24"  python3 gen_move_train_data.py -s $s -e $e > $DIRECTORY/g$s_$e.log 2>&1 &
