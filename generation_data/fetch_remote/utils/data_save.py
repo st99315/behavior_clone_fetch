@@ -102,9 +102,9 @@ class DataSaver:
         self._extra_images = []
         self._trajectories = []
 
-    def open_tf_writer(self):
+    def open_tf_writer(self, name):
         self.pattern = 0
-        rcfilename = os.path.join(self.dir, 'data1.tfrecords')
+        rcfilename = os.path.join(self.dir, '{}.tfrecords'.format(name))
         # 設定以 gzip 壓縮
         compression = tf.python_io.TFRecordCompressionType.GZIP
         self.writer = tf.python_io.TFRecordWriter(rcfilename,

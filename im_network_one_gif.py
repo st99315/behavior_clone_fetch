@@ -145,7 +145,7 @@ class BehaviorClone(object):
                     self.logger.debug('Last_conv.shape = {}'.format(conv_in.shape))
                     conv_out = tf.contrib.layers.spatial_softmax(conv_in, name='spatial_softmax')
         
-        print(conv_out.shape)
+        # print(conv_out.shape)
         # if don't have spatial softmax need to flatten
         if len(conv_out.shape) > 2:
             conv_out = Flaten(conv_out)
@@ -157,13 +157,13 @@ class BehaviorClone(object):
         gif_len  = self.pics_each_gif if self.pics_each_gif  is not None else -1
         gif_pic, ext_pic = gif_pics
 
-        gif_pics = tf.reshape(gif_pic, [self.batch_size, gif_len, self.img_h, self.img_w, self.img_d])
-        ext_pics = tf.reshape(ext_pic, [self.batch_size, gif_len, self.ext_h, self.ext_w, self.img_d])
+        gif_pics = tf.reshape(gif_pic, [gif_len, self.img_h, self.img_w, self.img_d])
+        ext_pics = tf.reshape(ext_pic, [gif_len, self.ext_h, self.ext_w, self.img_d])
 
         # cnn layer
         gif_conv_out = self.build_cnnlayer(gif_pics, 'network')
         ext_conv_out = self.build_cnnlayer(ext_pics, 'network_ext')
-        cnn_out = tf.concat([gif_conv_out, ext_conv_out], axis=1)
+        cnn_out = tf.concat([gif_conv_out, ext_conv_out], axis=1, name='cnn_concat')
 
         # build fc layer
         name = 'im_fc_1'
@@ -183,13 +183,13 @@ class BehaviorClone(object):
         # self.logger.debug('after reshape context {}'.format(context.shape))
         # self.logger.debug('context {}'.format(context))
 
-        fdb_out = tf.concat([self.batch_feedback, context], axis=1)
+        fdb_out = tf.concat([self.batch_fdb, context], axis=1, name='fdb_concat')
  
         fc_fdb_out = FC(fdb_out, com['size'], name_prefix=name, op=com['activation'])
         if self.drop_out:
             fc_fdb_out = tf.nn.dropout(fc_fdb_out, 0.5)
 
-        fc_input = tf.concat([fc_cnn_out, fc_fdb_out], axis=1)
+        fc_input = tf.concat([fc_cnn_out, fc_fdb_out], axis=1, name='cnnfdb_concat')
         print(fc_input.shape)
 
         name = 'im_fc_3'
@@ -227,10 +227,10 @@ class BehaviorClone(object):
 
     def build_inputs_and_outputs(self, gif=None, ext=None, fdb=None, cmd=None):
         self.logger.debug('Start ---------- build_inputs_and_outputs() -----------')
-        batch_gif_shape = [self.batch_size, self.pics_each_gif, self.img_h, self.img_w, self.img_d]
-        batch_ext_shape = [self.batch_size, self.pics_each_gif, self.ext_h, self.ext_w, self.img_d]
-        batch_act_shape = [self.batch_size, self.pics_each_gif, self.outs]
-        batch_fdb_shape = [self.batch_size, self.pics_each_gif, self.feedback_num]
+        batch_gif_shape = [self.pics_each_gif, self.img_h, self.img_w, self.img_d]
+        batch_ext_shape = [self.pics_each_gif, self.ext_h, self.ext_w, self.img_d]
+        batch_act_shape = [self.pics_each_gif, self.outs]
+        batch_fdb_shape = [self.pics_each_gif, self.feedback_num]
 
         self.batch_gif = tf.placeholder(tf.float32, batch_gif_shape, name='ph_batch_gif') if gif is None else gif
         self.batch_ext = tf.placeholder(tf.float32, batch_ext_shape, name='ph_batch_ext') if ext is None else ext
@@ -240,7 +240,7 @@ class BehaviorClone(object):
         # fn = lambda x: self.build_prediction(x)
         # out_dtype = [tf.float32, tf.float32]
         # self.batch_result = tf.map_fn(fn, elems=(self.batch_gif, self.batch_action), dtype=out_dtype)
-        self.batch_result = self.build_prediction([[self.batch_gif, self.batch_ext], self.batch_action])
+        self.batch_result = self.build_prediction([[self.batch_gif, self.batch_ext], self.batch_act])
 
         self.batch_prediction, self.batch_loss = self.batch_result
         self.total_im_loss = tf.reduce_mean(self.batch_loss)

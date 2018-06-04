@@ -1,10 +1,10 @@
-batch_size: 32
+batch_size: 1
 image_width: 240
 image_height: 240
 extra_width: 120
 extra_height: 120
 image_depth: 3
-pics_each_gif: 4
+pics_each_gif:
 robot_feedback_num: 11
 
 network: 

@@ -39,7 +39,7 @@ for noenv, env_name in enumerate(env_xmls):
     data_save_path = os.path.join(args.dir, 'object_{}'.format(noenv))
     saver    = DataSaver(data_save_path)
     tar_info = DataSaver(os.path.join(data_save_path, 'target'), info=True)
-    saver.open_tf_writer()
+    saver.open_tf_writer(name=args.start)
 
     for i in range(args.start, args.end):
         obs = env.reset(rand_text=args.random, rand_shadow=args.random, rand_cam=args.random)

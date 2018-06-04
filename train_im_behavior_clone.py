@@ -9,7 +9,7 @@ import numpy as np
 from os.path import join
 
 from config import cfg
-from load_data import DataLoaderTFRecord
+from load_data import DataLoader as DataLoader
 from im_network_one_gif import BehaviorClone
 from utils import print_all_var, recreate_dir
 from utils import set_logger, show_use_time
@@ -73,8 +73,9 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
                         train_logger.debug('predict cmd: {}, obj: {}, grip: {}'.format(line[:4], line[4:7], line[7:]))
 
         except tf.errors.OutOfRangeError:
-            train_logger.error('Batch out of range!')
-            exit()
+            train_logger.waring('Batch out of range!')
+            break
+            # exit()
         
         im_loss_sum += total_im_loss
         im_loss_avg = im_loss_sum / i
@@ -106,8 +107,8 @@ def valid_batch(*arg, **kwargs):
 logger.info('Start Logging')
 # Data Loader
 DataLoader.set_logger(build_logger)
-train_dlr = DataLoaderTFRecord(_TRAIN_DATA)
-valid_dlr = DataLoaderTFRecord(_VALID_DATA)
+train_dlr = DataLoader(_TRAIN_DATA)
+valid_dlr = DataLoader(_VALID_DATA)
 
 train_data = train_dlr.input_pipeline()
 valid_data = valid_dlr.input_pipeline()
@@ -117,7 +118,7 @@ gif, ext, fdb, cmd = tf.cond(is_training, lambda:(train_data), lambda:(valid_dat
 
 m = BehaviorClone(logger=build_logger)
 m.set_network_property(drop_out=FLAGS.drop_out)
-m.build_inputs_and_outputs(gif, ext, fdb, cmd)
+m.build_inputs_and_outputs(tf.squeeze(gif), tf.squeeze(ext), tf.squeeze(fdb), tf.squeeze(cmd))
 m.build_train_op()
 
 build_logger.info('--------- After build graph, get_trainable_dic() ------------')
