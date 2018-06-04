@@ -84,7 +84,7 @@ with tf.Session() as sess:
 
             rgb_obs = rgb_obs[np.newaxis, :]
             rgb_obs1 = rgb_obs1[np.newaxis, :]
-            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_obs, m.batch_ext: rgb_obs1, m.batch_feedback: traject})
+            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_obs, m.batch_ext: rgb_obs1, m.batch_fdb: traject})
             
             predict = np.squeeze(predict)
             actions = np.append(predict[:3], predict[3:4])
