@@ -9,7 +9,7 @@ import numpy as np
 from os.path import join
 
 from config import cfg
-from load_data import DataLoader as DataLoader
+from load_data import DataLoaderTFRcord as DataLoader
 from im_network_one_gif import BehaviorClone
 from utils import print_all_var, recreate_dir
 from utils import set_logger, show_use_time

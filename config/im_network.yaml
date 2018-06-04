@@ -1,4 +1,4 @@
-batch_size: 1
+batch_size: 32
 image_width: 240
 image_height: 240
 extra_width: 120
