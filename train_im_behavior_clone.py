@@ -9,7 +9,7 @@ import numpy as np
 from os.path import join
 
 from config import cfg
-from load_data import DataLoaderTFRcord as DataLoader
+from load_data import DataLoaderTFRecord as DataLoader
 from im_network_one_gif import BehaviorClone
 from utils import print_all_var, recreate_dir
 from utils import set_logger, show_use_time
@@ -58,7 +58,7 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
     im_loss_sum = 0.
     im_loss_avg = 0.
 
-    for i in range(1, datanums+1):
+    for i in range(1, np.ceil(datanums/cfg['batch_size']).astype(np.int32)):
         try:
             if training:
                 _, total_im_loss, predict = sess.run([model.train_op, model.total_im_loss, model.batch_prediction], 
@@ -107,8 +107,8 @@ def valid_batch(*arg, **kwargs):
 logger.info('Start Logging')
 # Data Loader
 DataLoader.set_logger(build_logger)
-train_dlr = DataLoader(_TRAIN_DATA)
-valid_dlr = DataLoader(_VALID_DATA)
+train_dlr = DataLoader(_TRAIN_DATA, train=True)
+valid_dlr = DataLoader(_VALID_DATA, train=False)
 
 train_data = train_dlr.input_pipeline()
 valid_data = valid_dlr.input_pipeline()

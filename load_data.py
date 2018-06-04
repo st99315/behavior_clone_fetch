@@ -148,7 +148,6 @@ class DataLoader:
 
     @staticmethod
     def start(sess):
-        print(DataLoader._coord)
         if DataLoader._coord is not None: #return
             print('to close')
             DataLoader.close()
@@ -161,7 +160,6 @@ class DataLoader:
 
     @staticmethod
     def close():
-        print(DataLoader._coord)
         if DataLoader._coord is None: return
         # Finish off the filename queue coordinator.
         DataLoader._coord.request_stop()
@@ -214,7 +212,7 @@ class DataLoaderTFRecord(DataLoader):
         #         example = tf.train.Example()
         #         example.ParseFromString(string_record)
         #         count += 1
-        count = 66794 if not train else 267176
+        count = 73625 if not train else 507727
         return count
 
     def get_all_filenames(self, dir, shuffle=False, size=None):
@@ -254,8 +252,8 @@ class DataLoaderTFRecord(DataLoader):
         # capacity 一定要比 min_after_dequeue 更大一些，
         # 多出來的部分可用於預先載入資料，建議值為：
         # min_after_dequeue + (num_threads + a small safety margin) * batch_size
-        min_after_dequeue = 32
-        capacity = min_after_dequeue + 3 * batch_size
+        min_after_dequeue = 64
+        capacity = min_after_dequeue + (self._NUM_THREAD + 2) * batch_size
 
         filename_queue = tf.train.string_input_producer(
                 self.all_tfrecords, num_epochs=num_epochs)
@@ -301,7 +299,7 @@ class DataLoaderTFRecord(DataLoader):
         gif_batch = tf.reshape(gif_batch, (batch_size*slice_num, self.img_w, self.img_h, self.img_depth))
         ext_batch = tf.reshape(ext_batch, (batch_size*slice_num, self.ext_w, self.ext_h, self.img_depth))
         fdb_batch = tf.reshape(fdb_batch, (batch_size*slice_num, self.fdb_len))
-        cmd_batch = tf.reshape(fdb_batch, (batch_size*slice_num, self._CSV_COLS - self.fdb_len))
+        cmd_batch = tf.reshape(cmd_batch, (batch_size*slice_num, self._CSV_COLS - self.fdb_len))
         return gif_batch, ext_batch, fdb_batch, cmd_batch
 
 
