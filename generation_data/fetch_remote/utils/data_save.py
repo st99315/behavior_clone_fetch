@@ -31,15 +31,18 @@ class DataSaver:
         self._images = []
         self._extra_images = []
         self._trajectories = []
+        self._predict_trajectories = []
         self.header = self._INFO_HEADER if info else self._TRAJECT_HEADER
 
-    def append(self, image=None, extra_img=None, trajectory=None):
+    def append(self, image=None, extra_img=None, trajectory=None, predict_trajectory=None):
         if image is not None:
             self._images.append(dcopy(image))
         if extra_img is not None:
             self._extra_images.append(dcopy(extra_img))
         if trajectory is not None:
             self._trajectories.append(dcopy(trajectory))
+        if predict_trajectory is not None:
+            self._predict_trajectories.append(dcopy(predict_trajectory))
 
     def _save_gif(self, img_buffer, file_name, clip):
         if not len(img_buffer):   return
@@ -52,8 +55,8 @@ class DataSaver:
         else:
             self.ext_path = path
     
-    def _save_tra(self, file_name, clip):
-        if not len(self._trajectories):   return
+    def _save_tra(self, tra_buffer, file_name, clip):
+        if not len(tra_buffer):   return
         self._trajectories = self._trajectories[clip[0]: clip[1]]
         self.tra_path = os.path.join(self.dir, file_name)
         np.savetxt(self.tra_path, self._trajectories, delimiter=' ', header=self.header)
@@ -84,15 +87,17 @@ class DataSaver:
             npdata = np.array(data, dtype=npdtype)
             np.savetxt(_file, npdata, delimiter=' ', fmt=fmt, header=header)
 
-    def save(self, epsoide, clip=(0, None)):
+    def save(self, epsoide, clip=(0, None), pred=False):
         ''' saving data (buffer) to desired directory
                 and clear buffer
             epsoide is int variable
          '''
         self._save_gif(self._images,       '{}-g.gif'.format(epsoide), clip)
         self._save_gif(self._extra_images, '{}-e.gif'.format(epsoide), clip)
-        self._save_tra('{}.csv'.format(epsoide), clip)
-        # self._save_slc(epsoide)
+        if not pred:
+            self._save_tra(self._trajectories,         '{}.csv'.format(epsoide), clip)
+        else:
+            self._save_tra(self._predict_trajectories, '{}.csv'.format(epsoide), clip)
         self.record_data(epsoide)
         self.flush()
 
@@ -101,6 +106,7 @@ class DataSaver:
         self._images = []
         self._extra_images = []
         self._trajectories = []
+        self._predict_trajectories = []
 
     def open_tf_writer(self, name):
         self.pattern = 0
@@ -116,6 +122,8 @@ class DataSaver:
         self.writer.close()
 
     def record_data(self, epsoide, slice_num=4):
+        if not hasattr(self, 'writer'): return 
+
         gif_len, tra_len = len(self._images), len(self._trajectories)
         if (gif_len != tra_len) or not (gif_len and tra_len):   return
 

@@ -75,11 +75,11 @@ with tf.Session() as sess:
             traject = traject[np.newaxis, :]
 
             rgb_obs = np.array(rgb_obs, dtype=np.float32)
-            rgb_obs -= GIF_MEAN
+            # rgb_obs -= GIF_MEAN
             rgb_obs /= 255.
 
             rgb_obs1 = np.array(rgb_obs1, dtype=np.float32)
-            rgb_obs1 -= GIF_MEAN
+            # rgb_obs1 -= GIF_MEAN
             rgb_obs1 /= 255.
 
             rgb_obs = rgb_obs[np.newaxis, :]
@@ -87,9 +87,9 @@ with tf.Session() as sess:
             predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_obs, m.batch_ext: rgb_obs1, m.batch_fdb: traject})
             
             predict = np.squeeze(predict)
-            actions = np.append(predict[:3], predict[3:4])
+            actions = predict[:4]
             
-            actions *= 4.
+            actions[:3] = actions[:3] * 4.
             obs, r, done, info = env.step(actions)
             total_reward += r
 

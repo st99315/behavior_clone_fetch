@@ -190,7 +190,7 @@ class BehaviorClone(object):
             fc_fdb_out = tf.nn.dropout(fc_fdb_out, 0.5)
 
         fc_input = tf.concat([fc_cnn_out, fc_fdb_out], axis=1, name='cnnfdb_concat')
-        print(fc_input.shape)
+        # print(fc_input.shape)
 
         name = 'im_fc_3'
         com = cfg['network_con'][name]

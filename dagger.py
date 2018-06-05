@@ -25,7 +25,7 @@ import load_data
 
 
 CKPT_DIR = 'checkpoints/'
-DATASET_DIR = './generation_data/train_data_diff_color_0531/train_data'
+DATASET_DIR = './generation_data/train_data_diff_color_0603/train_data'
 
 MAX_EPSO = 1000
 MAX_STEP = 300
@@ -33,6 +33,7 @@ ONE_TASK = 50
 YAM_FILE = DATASET_DIR.rpartition('/')[-1]+'.yaml'
 GIF_MEAN = load_data.get_gifs_mean(os.path.join(DATASET_DIR, YAM_FILE))
 
+BETA = 0.7
 GRIPPER_STATE = 1
 SCALE_SPEED = 4.0
 
@@ -111,10 +112,10 @@ with tf.Session() as sess:
 
             # prepocessing
             rgb_img = np.array(rgb_obs, dtype=np.float32)
-            rgb_img -= GIF_MEAN
+            # rgb_img -= GIF_MEAN
             rgb_img /= 255.
             ext_obs = np.array(ext_obs, dtype=np.float32)
-            ext_obs -= GIF_MEAN
+            # ext_obs -= GIF_MEAN
             ext_obs /= 255.
             rgb_img = rgb_img[np.newaxis, :]
             ext_obs = ext_obs[np.newaxis, :]
@@ -125,17 +126,17 @@ with tf.Session() as sess:
             trajectory = traject.copy()
             traject = traject[np.newaxis, :]
             
-            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_img, m.batch_ext: ext_obs, m.batch_feedback: traject})
-            expert  = simple_policy.execute()
-            # appending control command: delta ee pos (x, y, z), gripper state
-            trajectory = np.append(trajectory, expert)
-
+            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_img, m.batch_ext: ext_obs, m.batch_fdb: traject})
             predict = np.squeeze(predict)
-            g = predict[3:4]
-            actions = np.append(predict[:3], g)
-            
+            expert  = simple_policy.execute()
+            actions = np.array(expert[:4]) * BETA + np.array(predict[:4]) * (1. - BETA)
+
+            # appending control command: delta ee pos (x, y, z), gripper state
+            traject_expert = np.append(trajectory, expert)
+            traject_predic = np.append(trajectory, actions)
+
             # scale up action
-            actions = actions * SCALE_SPEED 
+            actions[:3] = actions[:3] * SCALE_SPEED 
             obs, r, done, info = env.step(actions)
 
             # update robot state
@@ -143,10 +144,13 @@ with tf.Session() as sess:
             total_reward += r
 
             # appending auxiliary: object and gripper pos
-            trajectory = np.append(trajectory, obs['achieved_goal'])
-            trajectory = np.append(trajectory, obs['eeinfo'][0])
+            traject_expert = np.append(traject_expert, obs['achieved_goal'])
+            traject_expert = np.append(traject_expert, obs['eeinfo'][0])
+            traject_predic = np.append(traject_predic, obs['achieved_goal'])
+            traject_predic = np.append(traject_predic, obs['eeinfo'][0])
             # appending trajectory to saver
-            saver.append(trajectory=trajectory)
+            saver.append(trajectory=traject_expert)
+            saver.append(predict_trajectory=traject_predic)
 
             if info['is_success'] or simple_policy.done:
                 break
@@ -167,9 +171,10 @@ with tf.Session() as sess:
         task_exe = np.concatenate((task_exe, arr_finish), axis=0)
 
         if len(finish) > 0:
-            saver.save(ep, clip)
+            save_predict = False #clip[1] is None
+            saver.save(ep, clip, pred=save_predict)
             tar_info.save(ep)
-            run_log.info("save   {} total reward {}. finish {} clip {}".format(ep, total_reward, len(finish), clip))
+            run_log.info("save   {} total reward {}. finish {} clip {} pred {}".format(ep, total_reward, len(finish), clip, save_predict))
         else:
             saver.flush()
             tar_info.flush()
