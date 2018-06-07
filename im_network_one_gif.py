@@ -227,8 +227,8 @@ class BehaviorClone(object):
 
     def build_inputs_and_outputs(self, gif=None, ext=None, fdb=None, cmd=None):
         self.logger.debug('Start ---------- build_inputs_and_outputs() -----------')
-        batch_gif_shape = [self.pics_each_gif, self.img_h, self.img_w, self.img_d]
-        batch_ext_shape = [self.pics_each_gif, self.ext_h, self.ext_w, self.img_d]
+        batch_gif_shape = [self.pics_each_gif, self.img_h, self.img_w, self.img_inch]
+        batch_ext_shape = [self.pics_each_gif, self.ext_h, self.ext_w, self.img_inch]
         batch_act_shape = [self.pics_each_gif, self.outs]
         batch_fdb_shape = [self.pics_each_gif, self.feedback_num]
 

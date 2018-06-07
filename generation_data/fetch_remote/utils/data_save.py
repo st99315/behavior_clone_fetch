@@ -116,6 +116,7 @@ class DataSaver:
         self.writer.close()
 
     def record_data(self, epsoide, slice_num=4):
+        if not hasattr(self, 'writer'): return
         gif_len, tra_len = len(self._images), len(self._trajectories)
         if (gif_len != tra_len) or not (gif_len and tra_len):   return
 

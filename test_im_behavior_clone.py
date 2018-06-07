@@ -29,7 +29,7 @@ XML_PATH = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs/blotchy_013
 args = frutils.get_args()
 frutils.set_env_variable(args.display)
 
-env = FetchPickAndPlaceEnv(xml_file=XML_PATH)
+env = FetchPickAndPlaceEnv()
 # env = FetchPickAndPlaceJointEnv(xml_file=XML_PATH)
 
 _, build_log, run_log, fb_log = utils.set_logger(['build', 'run', 'act_fb'], 'test.log')
@@ -60,6 +60,8 @@ with tf.Session() as sess:
 
         finish = []
         actions = np.array([0., 0., 0., 1.])
+        external = []
+        eyehand = []
         for step in range(500):
 
             if args.display:
@@ -75,19 +77,34 @@ with tf.Session() as sess:
             traject = traject[np.newaxis, :]
 
             rgb_obs = np.array(rgb_obs, dtype=np.float32)
-            rgb_obs -= GIF_MEAN
+            # rgb_obs -= GIF_MEAN
             rgb_obs /= 255.
 
             rgb_obs1 = np.array(rgb_obs1, dtype=np.float32)
-            rgb_obs1 -= GIF_MEAN
+            # rgb_obs1 -= GIF_MEAN
             rgb_obs1 /= 255.
 
             rgb_obs = rgb_obs[np.newaxis, :]
             rgb_obs1 = rgb_obs1[np.newaxis, :]
-            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_obs, m.batch_ext: rgb_obs1, m.batch_feedback: traject})
+            
+            def enqueue(buff, img):
+                if not len(buff):
+                    buff = [img, img, img, img]
+                else:
+                    buff.pop(0)
+                    buff.append(img)
+                return buff
+            external = enqueue(external, rgb_obs)
+            eyehand  = enqueue(eyehand, rgb_obs1)
+            external_in = np.concatenate(external, axis=-1)
+            eyehand_in = np.concatenate(eyehand, axis=-1)
+            # print(external_in.shape, eyehand_in.shape)
+
+            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: external_in, m.batch_ext: eyehand_in, m.batch_fdb: traject})
             
             predict = np.squeeze(predict)
             actions = np.append(predict[:3], predict[3:4])
+            print('girp:', obs['gripper_dense'], actions[-1])
             
             actions *= 4.
             obs, r, done, info = env.step(actions)

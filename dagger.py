@@ -25,9 +25,9 @@ import load_data
 
 
 CKPT_DIR = 'checkpoints/'
-DATASET_DIR = './generation_data/train_data_diff_color_0531/train_data'
+DATASET_DIR = './generation_data/train_data_diff_color_0606/train_data'
 
-MAX_EPSO = 1000
+MAX_EPSO = 100
 MAX_STEP = 300
 ONE_TASK = 50
 YAM_FILE = DATASET_DIR.rpartition('/')[-1]+'.yaml'
@@ -35,10 +35,6 @@ GIF_MEAN = load_data.get_gifs_mean(os.path.join(DATASET_DIR, YAM_FILE))
 
 GRIPPER_STATE = 1
 SCALE_SPEED = 4.0
-
-GYM_PATH = gym.__path__[0]
-XML_PATH = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs/blotchy_0130_marbled_0170.xml')
-# XML_PATH = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs/perforated_0016_veined_0091.xml')
 
 
 def get_lastnum(directory):
@@ -55,7 +51,7 @@ def get_lastnum(directory):
 args = frutils.get_args()
 frutils.set_env_variable(args.display)
 
-env = FetchPickAndPlaceEnv(xml_file=XML_PATH)
+env = FetchPickAndPlaceEnv()
 # env = FetchPickAndPlaceJointEnv(xml_file=XML_PATH)
 
 _, build_log, run_log = utils.set_logger(['build', 'run'], 'dagger.log')
@@ -80,6 +76,7 @@ with tf.Session() as sess:
     run_log.info(data_save_path)
     saver    = DataSaver(data_save_path)
     tar_info = DataSaver(os.path.join(data_save_path, 'target'), info=True)
+    saver.open_tf_writer(name=args.start)
 
     # count executed task
     task_exe = np.array([[0, 0, 0, 0, 0]])
@@ -97,6 +94,8 @@ with tf.Session() as sess:
         total_reward = 0
         clip = (0, None)
 
+        external = []
+        eyehand = []
         for step in range(MAX_STEP):
 
             rgb_obs = env.sim.render(width=cfg['image_width'], height=cfg['image_height'], camera_name="external_camera_0", depth=False,
@@ -111,13 +110,25 @@ with tf.Session() as sess:
 
             # prepocessing
             rgb_img = np.array(rgb_obs, dtype=np.float32)
-            rgb_img -= GIF_MEAN
+            # rgb_img -= GIF_MEAN
             rgb_img /= 255.
             ext_obs = np.array(ext_obs, dtype=np.float32)
-            ext_obs -= GIF_MEAN
+            # ext_obs -= GIF_MEAN
             ext_obs /= 255.
             rgb_img = rgb_img[np.newaxis, :]
             ext_obs = ext_obs[np.newaxis, :]
+
+            def enqueue(buff, img):
+                if not len(buff):
+                    buff = [img, img, img, img]
+                else:
+                    buff.pop(0)
+                    buff.append(img)
+                return buff
+            external = enqueue(external, rgb_img)
+            eyehand  = enqueue(eyehand, ext_obs)
+            external_in = np.concatenate(external, axis=-1)
+            eyehand_in = np.concatenate(eyehand, axis=-1)
 
             traject = np.append(obs['eeinfo'][0], obs['weneed'])
             traject = np.append(traject, obs['gripper_dense'])
@@ -125,7 +136,7 @@ with tf.Session() as sess:
             trajectory = traject.copy()
             traject = traject[np.newaxis, :]
             
-            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: rgb_img, m.batch_ext: ext_obs, m.batch_feedback: traject})
+            predict = sess.run([m.batch_prediction], feed_dict={m.batch_gif: external_in, m.batch_ext: eyehand_in, m.batch_fdb: traject})
             expert  = simple_policy.execute()
             # appending control command: delta ee pos (x, y, z), gripper state
             trajectory = np.append(trajectory, expert)
@@ -177,3 +188,5 @@ with tf.Session() as sess:
 
         task_exe = np.sum(task_exe, axis=0)[np.newaxis, :]
         run_log.info("total finish task {}".format(task_exe))
+
+    saver.close_tf_writer()
