@@ -38,6 +38,7 @@ class BehaviorClone(object):
         self.ext_w = cfg['extra_width']
         self.ext_h = cfg['extra_height']
         self.img_d = cfg['image_depth']
+        self.img_inch = cfg['in_channel']
         self.feedback_num = cfg['robot_feedback_num']
         self.outs = cfg['network_con']['im_prediction']['size']
         self.training = training
@@ -62,7 +63,7 @@ class BehaviorClone(object):
             
             if com['type'] == 'conv':
                 if pre_com == None:
-                    in_channel = self.img_d
+                    in_channel = self.img_inch
                 elif pre_com['type'] == 'conv':
                     in_channel = pre_com['out_channel']
                 else:
@@ -82,7 +83,7 @@ class BehaviorClone(object):
             
             if com['type'] == 'conv':
                 if pre_com1 == None:
-                    in_channel = self.img_d
+                    in_channel = self.img_inch
                 elif pre_com1['type'] == 'conv':
                     in_channel = pre_com1['out_channel']
                 else:
@@ -157,8 +158,8 @@ class BehaviorClone(object):
         gif_len  = self.pics_each_gif if self.pics_each_gif  is not None else -1
         gif_pic, ext_pic = gif_pics
 
-        gif_pics = tf.reshape(gif_pic, [gif_len, self.img_h, self.img_w, self.img_d])
-        ext_pics = tf.reshape(ext_pic, [gif_len, self.ext_h, self.ext_w, self.img_d])
+        gif_pics = tf.reshape(gif_pic, [gif_len, self.img_h, self.img_w, self.img_inch])
+        ext_pics = tf.reshape(ext_pic, [gif_len, self.ext_h, self.ext_w, self.img_inch])
 
         # cnn layer
         gif_conv_out = self.build_cnnlayer(gif_pics, 'network')
@@ -178,7 +179,6 @@ class BehaviorClone(object):
         context = tf.get_variable(com['bias_transform_name'])
         zero_tensor = tf.zeros_like(fc_cnn_out)[:, :com['bias_transform']]
         context = zero_tensor + context
-
         # self.logger.debug('zero_tensor {}'.format(zero_tensor))
         # self.logger.debug('after reshape context {}'.format(context.shape))
         # self.logger.debug('context {}'.format(context))

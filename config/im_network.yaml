@@ -4,6 +4,7 @@ image_height: 240
 extra_width: 120
 extra_height: 120
 image_depth: 3
+in_channel: 12
 pics_each_gif:
 robot_feedback_num: 11
 

@@ -173,7 +173,7 @@ class DataLoader:
 
 
 class DataLoaderTFRecord(DataLoader):
-    _NUM_THREAD = 4
+    _NUM_THREAD = 16
 
     def __init__(self, directory, train=True, load_num=None):
         self.initial(directory, train)
@@ -212,7 +212,8 @@ class DataLoaderTFRecord(DataLoader):
         #         example = tf.train.Example()
         #         example.ParseFromString(string_record)
         #         count += 1
-        count = 73625 if not train else 507727
+        #count = 73625 if not train else 507727
+        count = 44175 if not train else 203091
         return count
 
     def get_all_filenames(self, dir, shuffle=False, size=None):
@@ -241,9 +242,12 @@ class DataLoaderTFRecord(DataLoader):
             extlist.append(ext)
             csvlist.append(csv)
         
-        gifs = tf.stack(giflist, axis=0)
-        exts = tf.stack(extlist, axis=0)
-        csvs = tf.stack(csvlist, axis=0)
+        #gifs = tf.stack(giflist, axis=0)
+        #exts = tf.stack(extlist, axis=0)
+        #csvs = tf.stack(csvlist, axis=0)
+        gifs = tf.concat(giflist, axis=2)
+        exts = tf.concat(extlist, axis=2)
+        csvs = csvlist[-1]
         return gifs, exts, csvs
 
     def input_pipeline(self, batch_size=None, num_epochs=None, slice_num=4):
@@ -252,7 +256,7 @@ class DataLoaderTFRecord(DataLoader):
         # capacity 一定要比 min_after_dequeue 更大一些，
         # 多出來的部分可用於預先載入資料，建議值為：
         # min_after_dequeue + (num_threads + a small safety margin) * batch_size
-        min_after_dequeue = 64
+        min_after_dequeue = 1000
         capacity = min_after_dequeue + (self._NUM_THREAD + 2) * batch_size
 
         filename_queue = tf.train.string_input_producer(
@@ -296,10 +300,10 @@ class DataLoaderTFRecord(DataLoader):
         #    capacity=capacity,
         #    num_threads=self._NUM_THREAD
         #)
-        gif_batch = tf.reshape(gif_batch, (batch_size*slice_num, self.img_w, self.img_h, self.img_depth))
-        ext_batch = tf.reshape(ext_batch, (batch_size*slice_num, self.ext_w, self.ext_h, self.img_depth))
-        fdb_batch = tf.reshape(fdb_batch, (batch_size*slice_num, self.fdb_len))
-        cmd_batch = tf.reshape(cmd_batch, (batch_size*slice_num, self._CSV_COLS - self.fdb_len))
+        #gif_batch = tf.reshape(gif_batch, (batch_size*slice_num, self.img_w, self.img_h, self.img_depth))
+        #ext_batch = tf.reshape(ext_batch, (batch_size*slice_num, self.ext_w, self.ext_h, self.img_depth))
+        #fdb_batch = tf.reshape(fdb_batch, (batch_size*slice_num, self.fdb_len))
+        #cmd_batch = tf.reshape(cmd_batch, (batch_size*slice_num, self._CSV_COLS - self.fdb_len))
         return gif_batch, ext_batch, fdb_batch, cmd_batch
 
 
