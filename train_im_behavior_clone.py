@@ -159,7 +159,8 @@ with tf.Session() as sess:
     try:
         DataLoader.start(sess)
 
-        for ep in range(start_ep, _EPOCHS):
+        end_ep = int((np.floor(start_ep / (_EPOCHS - 1)) + 1) * _EPOCHS)
+        for ep in range(start_ep, end_ep):
             train_logger.info('----- Train -----')
             train_avg_loss = train_all_batch(sess, m, ep, train_dlr.data_nums)
             train_logger.info('----- Valid -----')
