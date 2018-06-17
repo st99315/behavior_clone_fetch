@@ -152,7 +152,8 @@ class DataLoader:
             print('to close')
             DataLoader.close()
         # Required to get the filename matching to run.
-        tf.local_variables_initializer().run()
+        tf.local_variables_initializer().run(session=sess)
+
         # Coordinate the loading of image files.
         DataLoader._coord   = tf.train.Coordinator()
         DataLoader._threads = tf.train.start_queue_runners(sess=sess, coord=DataLoader._coord, start=True)
@@ -173,20 +174,21 @@ class DataLoader:
 
 
 class DataLoaderTFRecord(DataLoader):
-    _NUM_THREAD = 16
+    _NUM_THREAD = 2
 
-    def __init__(self, directory, train=True, load_num=None):
-        self.initial(directory, train)
+    def __init__(self, directory, load_num=None):
+        self.initial(directory)
 
-    def initial(self, directory, train):
+    def initial(self, directory):
         all_tfrecords = self.get_all_filenames(directory, shuffle=True)
         dataset_num = len(all_tfrecords)
+        assert dataset_num is not 0, DataLoader._logger.error('No dataset loaded!')
 
         # TODO: count all data num
-        self.data_num = self.count_all_pattern(all_tfrecords, train)
+        self.data_num = self.count_all_pattern(all_tfrecords)
 
         DataLoader._logger.info('All TFRecord files: {}'.format(dataset_num))
-        DataLoader._logger.info('All patterns: {}'.format(self.data_num))
+        DataLoader._logger.info('All patterns:       {}'.format(self.data_num))
 
         assert self.data_num is not 0, DataLoader._logger.error('No data loaded!')
         self.all_tfrecords = tf.convert_to_tensor(all_tfrecords)
@@ -202,18 +204,11 @@ class DataLoaderTFRecord(DataLoader):
         self.img_depth = self.cfg['image_depth']
         self.fdb_len = self.cfg['robot_feedback_num']
 
-    def count_all_pattern(self, all_files, train):
-        # self.compression = tf.python_io.TFRecordCompressionType.GZIP
-        # count = 0
-        # for _file in all_files:
-        #     record_iterator = tf.python_io.tf_record_iterator(path=_file,
-        #             options=tf.python_io.TFRecordOptions(self.compression))
-        #     for string_record in record_iterator:
-        #         example = tf.train.Example()
-        #         example.ParseFromString(string_record)
-        #         count += 1
-        #count = 73625 if not train else 507727
-        count = 44175 if not train else 203091
+    def count_all_pattern(self, all_files):
+        count = 0
+        for tfrcfile in all_files:
+            num = tfrcfile.rpartition('-')[-1].rpartition('.')[0]
+            count += int(num)
         return count
 
     def get_all_filenames(self, dir, shuffle=False, size=None):
@@ -256,7 +251,7 @@ class DataLoaderTFRecord(DataLoader):
         # capacity 一定要比 min_after_dequeue 更大一些，
         # 多出來的部分可用於預先載入資料，建議值為：
         # min_after_dequeue + (num_threads + a small safety margin) * batch_size
-        min_after_dequeue = 1000
+        min_after_dequeue = 512
         capacity = min_after_dequeue + (self._NUM_THREAD + 2) * batch_size
 
         filename_queue = tf.train.string_input_producer(

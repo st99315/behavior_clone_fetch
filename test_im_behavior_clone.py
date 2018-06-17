@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 
 import gym
 from gym.envs.robotics.fetch_env import goal_distance
-from gym.envs.robotics import FetchPickAndPlaceEnv, FetchPickAndPlaceJointEnv
+from gym.envs.robotics import FetchPickAndPlaceEnv
 
 from im_network_one_gif import BehaviorClone
 try:
@@ -19,18 +19,12 @@ import load_data
 
 
 CKPT_DIR = 'checkpoints/'
-GIF_MEAN = load_data.get_gifs_mean('')
 DEMO_TIMES = 10
-
-GYM_PATH = gym.__path__[0]
-XML_PATH = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs/blotchy_0130_marbled_0170.xml')
-# XML_PATH = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs/perforated_0016_veined_0091.xml')
 
 args = frutils.get_args()
 frutils.set_env_variable(args.display)
 
 env = FetchPickAndPlaceEnv()
-# env = FetchPickAndPlaceJointEnv(xml_file=XML_PATH)
 
 _, build_log, run_log, fb_log = utils.set_logger(['build', 'run', 'act_fb'], 'test.log')
 
@@ -62,7 +56,7 @@ with tf.Session() as sess:
         actions = np.array([0., 0., 0., 1.])
         external = []
         eyehand = []
-        for step in range(500):
+        for step in range(100):
 
             if args.display:
                 env.render()

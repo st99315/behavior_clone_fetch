@@ -104,16 +104,18 @@ class DataSaver:
 
     def open_tf_writer(self, name):
         self.pattern = 0
-        rcfilename = os.path.join(self.dir, '{}.tfrecords'.format(name))
+        self.rcfilename = os.path.join(self.dir, '{}.tfrecords'.format(name))
         # 設定以 gzip 壓縮
         compression = tf.python_io.TFRecordCompressionType.GZIP
-        self.writer = tf.python_io.TFRecordWriter(rcfilename,
+        self.writer = tf.python_io.TFRecordWriter(self.rcfilename,
             options=tf.python_io.TFRecordOptions(compression))
         # self.writer = tf.python_io.TFRecordWriter(rcfilename)
 
     def close_tf_writer(self):
-        print('dataset total pattern', self.pattern)
         self.writer.close()
+        print('dataset total pattern', self.pattern)
+        newname = self.rcfilename.rpartition('.')[0] + '-{}.tfrecords'.format(self.pattern)
+        os.rename(self.rcfilename, newname)
 
     def record_data(self, epsoide, slice_num=4):
         if not hasattr(self, 'writer'): return

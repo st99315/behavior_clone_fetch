@@ -107,8 +107,8 @@ def valid_batch(*arg, **kwargs):
 logger.info('Start Logging')
 # Data Loader
 DataLoader.set_logger(build_logger)
-train_dlr = DataLoader(_TRAIN_DATA, train=True)
-valid_dlr = DataLoader(_VALID_DATA, train=False)
+train_dlr = DataLoader(_TRAIN_DATA)
+valid_dlr = DataLoader(_VALID_DATA)
 
 train_data = train_dlr.input_pipeline()
 valid_data = valid_dlr.input_pipeline()
