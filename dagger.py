@@ -27,7 +27,7 @@ import load_data
 CKPT_DIR = 'checkpoints/'
 DATASET_DIR = './generation_data/train_data_diff_color_0606/train_data'
 
-MAX_EPSO = 100
+MAX_EPSO = 10
 MAX_STEP = 300
 ONE_TASK = 50
 YAM_FILE = DATASET_DIR.rpartition('/')[-1]+'.yaml'
