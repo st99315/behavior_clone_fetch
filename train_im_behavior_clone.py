@@ -15,7 +15,7 @@ from utils import print_all_var, recreate_dir
 from utils import set_logger, show_use_time
 
 
-_DATASET_DIR = './generation_data/train_data_diff_color_0603/'
+_DATASET_DIR = './generation_data/train_data_diff_color_0615/'
 _TRAIN_DATA = _DATASET_DIR + 'train_data'
 _VALID_DATA = _DATASET_DIR + 'valid_data'
 
@@ -135,7 +135,7 @@ with tf.Session() as sess:
     # -------restore------
     recreate_dir(FLAGS.log_dir)
     model_file = tf.train.latest_checkpoint(FLAGS.model_dir)
-    saver = tf.train.Saver(max_to_keep=5)
+    saver = tf.train.Saver(max_to_keep=2)
     if model_file is not None:
         build_logger.info('Use model_file = ' + str(model_file) + '!')
         saver.restore(sess, model_file)

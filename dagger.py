@@ -25,21 +25,16 @@ import load_data
 
 
 CKPT_DIR = 'checkpoints/'
-DATASET_DIR = './generation_data/train_data_diff_color_0603/train_data'
+# DATASET_DIR = './generation_data/train_data_diff_color_0615/train_data'
+DATASET_DIR = './generation_data/train_data_diff_color_0615/valid_data'
 
-MAX_EPSO = 1000
+# MAX_EPSO = 50
+MAX_EPSO = 5
 MAX_STEP = 300
-ONE_TASK = 50
-YAM_FILE = DATASET_DIR.rpartition('/')[-1]+'.yaml'
-GIF_MEAN = load_data.get_gifs_mean(os.path.join(DATASET_DIR, YAM_FILE))
+ONE_TASK = 40
 
-BETA = 0.7
-GRIPPER_STATE = 1
+BETA = 0
 SCALE_SPEED = 4.0
-
-GYM_PATH = gym.__path__[0]
-XML_PATH = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs/blotchy_0130_marbled_0170.xml')
-# XML_PATH = os.path.join(GYM_PATH, 'envs/robotics/assets/fetch/myenvs/perforated_0016_veined_0091.xml')
 
 
 def get_lastnum(directory):
@@ -56,8 +51,7 @@ def get_lastnum(directory):
 args = frutils.get_args()
 frutils.set_env_variable(args.display)
 
-env = FetchPickAndPlaceEnv(xml_file=XML_PATH)
-# env = FetchPickAndPlaceJointEnv(xml_file=XML_PATH)
+env = FetchPickAndPlaceEnv()
 
 _, build_log, run_log = utils.set_logger(['build', 'run'], 'dagger.log')
 
