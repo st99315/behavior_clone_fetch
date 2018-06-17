@@ -25,9 +25,9 @@ import load_data
 
 
 CKPT_DIR = 'checkpoints/'
-DATASET_DIR = './generation_data/train_data_diff_color_0615/train_data'
+DATASET_DIR = './generation_data/train_data_diff_color_0615/valid_data'
 
-MAX_EPSO = 50
+MAX_EPSO = 5
 MAX_STEP = 300
 ONE_TASK = 40
 

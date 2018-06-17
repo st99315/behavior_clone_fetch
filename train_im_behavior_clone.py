@@ -121,9 +121,6 @@ m.set_network_property(drop_out=FLAGS.drop_out)
 m.build_inputs_and_outputs(tf.squeeze(gif), tf.squeeze(ext), tf.squeeze(fdb), tf.squeeze(cmd))
 m.build_train_op()
 
-build_logger.info('--------- After build graph, get_trainable_dic() ------------')
-get_trainable_dic()
-
 # limit memory
 # config = tf.ConfigProto()
 # config.gpu_options.allow_growth = True                   # allocate dynamically
@@ -139,8 +136,7 @@ with tf.Session() as sess:
     if model_file is not None:
         build_logger.info('Use model_file = ' + str(model_file) + '!')
         saver.restore(sess, model_file)
-        build_logger.info('--------- After build graph, get_trainable_dic() ------------')
-        get_trainable_dic()
+
         # get ckpt epoch num
         start_ep = int(model_file.rpartition('-')[-1]) + 1
     else:
@@ -152,6 +148,9 @@ with tf.Session() as sess:
         # run_options = tf.RunOptions(report_tensor_allocations_upon_oom=True)
         # sess.run(op, options=run_options)
         build_logger.info('Initialize all variables Finish')
+
+    build_logger.info('--------- After build graph, get_trainable_dic() ------------')
+    get_trainable_dic()
 
     # record start time
     train_start_time = time.time()
