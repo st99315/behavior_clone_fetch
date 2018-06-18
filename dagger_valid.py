@@ -25,9 +25,9 @@ import load_data
 
 
 CKPT_DIR = 'checkpoints/'
-DATASET_DIR = './generation_data/train_data_diff_color_0615/train_data'
+DATASET_DIR = './generation_data/train_data_diff_color_0615/valid_data'
 
-MAX_EPSO = 50
+MAX_EPSO = 5
 MAX_STEP = 300
 ONE_TASK = 40
 
@@ -175,8 +175,10 @@ with tf.Session() as sess:
         task_exe = np.concatenate((task_exe, arr_finish), axis=0)
 
         if len(finish) > 0:
-            saver.save(ep, clip)
-            tar_info.save(ep)
+            # saver.save(ep, clip)
+            # tar_info.save(ep)
+            saver.flush()
+            tar_info.flush()
             run_log.info("save   {} total reward {}. finish {} clip {}".format(ep, total_reward, len(finish), clip))
         else:
             saver.flush()

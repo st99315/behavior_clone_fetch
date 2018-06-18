@@ -174,7 +174,7 @@ class DataLoader:
 
 
 class DataLoaderTFRecord(DataLoader):
-    _NUM_THREAD = 2
+    _NUM_THREAD = 4
 
     def __init__(self, directory, load_num=None):
         self.initial(directory)

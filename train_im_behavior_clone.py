@@ -15,7 +15,7 @@ from utils import print_all_var, recreate_dir
 from utils import set_logger, show_use_time
 
 
-_DATASET_DIR = '/out/train_data_diff_color_0603/'
+_DATASET_DIR = './generation_data/train_data_diff_color_0615/'
 _TRAIN_DATA = _DATASET_DIR + 'train_data'
 _VALID_DATA = _DATASET_DIR + 'valid_data'
 
@@ -58,7 +58,7 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
     im_loss_sum = 0.
     im_loss_avg = 0.
 
-    for i in range(1, np.ceil(datanums/cfg['batch_size']).astype(np.int32)):
+    for i in range(1, np.ceil(datanums/cfg['batch_size']).astype(np.int32)+1):
         try:
             if training:
                 _, total_im_loss, predict = sess.run([model.train_op, model.total_im_loss, model.batch_prediction], 
@@ -94,6 +94,9 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
                 summary.value.add(tag="[Train] loss (every_100_gif)", simple_value=np.sqrt(im_loss_avg / 100.0))
                 summary_writer.add_summary(summary, all_gif_num)
 
+    train_logger.info("{} -> epoch: {:0>4d}, total iter: {:4d}". \
+            format(head_str, epoch, i))
+
     summary_writer.flush()
     show_use_time(time.time() - start_time, head_str + ' use time:', train_logger)
 
@@ -121,26 +124,22 @@ m.set_network_property(drop_out=FLAGS.drop_out)
 m.build_inputs_and_outputs(tf.squeeze(gif), tf.squeeze(ext), tf.squeeze(fdb), tf.squeeze(cmd))
 m.build_train_op()
 
-build_logger.info('--------- After build graph, get_trainable_dic() ------------')
-get_trainable_dic()
-
 # limit memory
-# config = tf.ConfigProto()
-# config.gpu_options.allow_growth = True                   # allocate dynamically
-# config.gpu_options.per_process_gpu_memory_fraction = 0.8 # maximun alloc gpu50% of MEM
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True                   # allocate dynamically
+config.gpu_options.per_process_gpu_memory_fraction = 0.9 # maximun alloc gpu50% of MEM
 
-with tf.Session() as sess:
+with tf.Session(config=config) as sess:
     start_ep = 0
 
     # -------restore------
     recreate_dir(FLAGS.log_dir)
     model_file = tf.train.latest_checkpoint(FLAGS.model_dir)
-    saver = tf.train.Saver(max_to_keep=5)
+    saver = tf.train.Saver(max_to_keep=2)
     if model_file is not None:
         build_logger.info('Use model_file = ' + str(model_file) + '!')
         saver.restore(sess, model_file)
-        build_logger.info('--------- After build graph, get_trainable_dic() ------------')
-        get_trainable_dic()
+
         # get ckpt epoch num
         start_ep = int(model_file.rpartition('-')[-1]) + 1
     else:
@@ -153,13 +152,17 @@ with tf.Session() as sess:
         # sess.run(op, options=run_options)
         build_logger.info('Initialize all variables Finish')
 
+    build_logger.info('--------- After build graph, get_trainable_dic() ------------')
+    get_trainable_dic()
+
     # record start time
     train_start_time = time.time()
     
     try:
         DataLoader.start(sess)
 
-        for ep in range(start_ep, _EPOCHS):
+        end_ep = int((np.floor(start_ep / (_EPOCHS - 1)) + 1) * _EPOCHS)
+        for ep in range(start_ep, end_ep):
             train_logger.info('----- Train -----')
             train_avg_loss = train_all_batch(sess, m, ep, train_dlr.data_nums)
             train_logger.info('----- Valid -----')

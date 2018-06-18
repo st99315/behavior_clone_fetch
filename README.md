@@ -66,3 +66,14 @@ deactivate
 ```bash
 pip install $SOMEMODLUE
 ```
+
+## Error for OpenAI Gym with Mujoco
+1. fatal error: GL/glew.h: No such file or directory
+```bash
+sudo apt-get install libglew-dev
+```
+
+2. FileNotFoundError: [Errno 2] No such file or directory: 'patchelf'
+```bash
+sudo apt install patchelf
+```
