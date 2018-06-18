@@ -36,7 +36,7 @@ class BehaviorClone(object):
         self.img_w = cfg['image_width']
         self.img_h = cfg['image_height']
         self.img_d = cfg['image_depth']
-        self.feedback_num = cfg['robot_configuration_num']
+        self.feedback_num = cfg['robot_feedback_num']
         self.outs = cfg['network']['im_prediction']['size']
         self.training = training
         self.set_network_property()

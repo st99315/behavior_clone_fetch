@@ -1,15 +1,15 @@
 batch_size: 5
-image_width: 256
-image_height: 256
+image_width: 240
+image_height: 240
 image_depth: 3
 pic_num_each_gif:
-robot_configuration_num: 11
+robot_feedback_num: 11
 
 network: 
     im_conv_1: 
         type: 'conv'
         kernel_size: 3
-        out_channel: 128
+        out_channel: 64
         stride: 2
     im_conv_2: 
         type: 'conv'
@@ -19,14 +19,13 @@ network:
     im_conv_3: 
         type: 'conv'
         kernel_size: 3
-        out_channel: 64
+        out_channel: 32
         stride: 2
     im_conv_4: 
         type: 'conv'
         kernel_size: 3
         out_channel: 32
         stride: 2
-        spatial_softmax:
     im_fc_1:
         type: 'fc'
         size: 200
@@ -38,4 +37,4 @@ network:
     im_prediction:
         type: 'fc'
         size: 10
-    
+

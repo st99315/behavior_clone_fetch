@@ -12,67 +12,88 @@ import random
 import config
 
 
+import os
+import tensorflow as tf
+import glob
+import random
+import config
+import numpy as np
+
+
 def get_gifs_mean(path):
     import yaml
     try:
         with open(path) as file:
             content = yaml.load(file)
             mean = content['all_gifs_mean']
-            return [mean['r'], mean['g'], mean['b']]
+            mean_list = [mean['r'], mean['g'], mean['b']]
     except FileNotFoundError:
         # ImageNet or VGG dataset RGB mean
-        return [123.68, 103.939, 116.779]
+        mean_list = [123.68, 103.939, 116.779]
+    finally:
+        print('Load Mean:', mean_list)
+        return np.array(mean_list)
 
 
 class DataLoader:
     """ Need Set Logger """
-    _MAX_LEN = 300
-    _HEAD_LINE = 1
+    _MAX_LEN  = 300
+    _CSV_COLS = 21
+    _HEAD_LINE  = 1
     _NUM_THREAD = 1
     _coord, _threads, _logger = None, None, None
 
-    def __init__(self, directory, img_size=128, csv_cols=21, load_num=None):
-        self._GIF_SHAPE = (None, img_size, img_size, 3)
-        self._CSV_COLS  = csv_cols
+    def __init__(self, directory, load_num=None):
+        self.initial(directory, load_num)
 
-        self.coord = None
-        all_gifs, all_csvs = self.get_all_filenames(directory, shuffle=True, size=load_num)
+    def initial(self, directory, load_num=None):
+        all_gifs, all_exts, all_csvs = self.get_all_filenames(directory, shuffle=True, size=load_num)
         self.data_num = len(all_gifs)
 
         DataLoader._logger.info('All data: {}'.format(self.data_num))
         assert self.data_num is not 0, DataLoader._logger.error('No data loaded!')
         
         self.gif_names = tf.convert_to_tensor(all_gifs)
+        self.ext_names = tf.convert_to_tensor(all_exts)
         self.csv_names = tf.convert_to_tensor(all_csvs)
-
-        yaml_path = directory.rpartition('/')[0] + '.yaml'
-        rgb_mean = get_gifs_mean(yaml_path)
-        DataLoader._logger.debug('RGB mean of dataset, r: {}, g: {}, b: {}' \
-            .format(rgb_mean[0], rgb_mean[1], rgb_mean[2]))
-        self.data_mean = tf.convert_to_tensor(rgb_mean)
-
-    @property
-    def data_nums(self):
-        return self.data_num
+        self.set_parameter()
+        self.get_mean(directory)
 
     def get_all_filenames(self, dir, shuffle=False, size=None):
-        gifs = glob.glob(os.path.join(dir, '*.gif'))
+        # finf all of folder
+        folders = glob.glob(os.path.join(dir, 'object*'))
+        # get all of gifs
+        gifs = []
+        for folder in folders:
+            gifs.append(glob.glob(os.path.join(folder, '*-g.gif')))
+        gifs = np.concatenate(gifs)
+        # shuffle list
         if shuffle: random.shuffle(gifs)
-        csvs = []
+        # get all of exts and csvs
+        exts, csvs = [], []
         for name in gifs:
-            csvs.append(name.rpartition('.')[0]+'.csv')
-        return gifs[:size], csvs[:size]
+            filename = name.rpartition('.')[0].rpartition('-')[0]
+            exts.append(filename+'-e.gif')
+            csvs.append(filename+'.csv')
+
+        return gifs[:size], exts[:size], csvs[:size]
+
+    def set_parameter(self, img_size=256, csv_cols=21):
+        # self._GIF_SHAPE = (None, img_size, img_size, 3)
+        self._CSV_COLS  = csv_cols
+
+    def get_mean(self, directory):
+        yaml_path = os.path.join(directory, directory.rpartition('/')[-1] + '.yaml')
+        rgb_mean = get_gifs_mean(yaml_path)
+        DataLoader._logger.debug('RGB mean, r: {}, g: {}, b: {}' \
+            .format(rgb_mean[0], rgb_mean[1], rgb_mean[2]))
+        self.data_mean = tf.convert_to_tensor(rgb_mean, tf.float32)
 
     def _image_preprosess(self, image):
-        image.set_shape(self._GIF_SHAPE)
         image = tf.cast(image, tf.float32)
         # normalize
-        image -= self.data_mean
+        # image -= self.data_mean
         image /= 255.
-
-        # Subtract off the mean and divide by the variance of the pixels.
-        # image = tf.image.per_image_standardization(image)
-
         return image
 
     def _read_gif_format(self, filename_queue):
@@ -91,7 +112,7 @@ class DataLoader:
         # transpose tensor
         features = tf.transpose(features, [1, 0])
         # slice features to feedback and command
-        feedback_num = config.cfg['robot_configuration_num']
+        feedback_num = config.cfg['robot_feedback_num']
         fdb = features[..., :feedback_num]
         cmd = features[..., feedback_num:]
         return key, fdb, cmd
@@ -104,32 +125,42 @@ class DataLoader:
         capacity = min_after_dequeue + 3 * batch_size
 
         gifnames_queue = tf.train.string_input_producer(self.gif_names, num_epochs=num_epochs, shuffle=False, capacity=capacity)
+        extnames_queue = tf.train.string_input_producer(self.ext_names, num_epochs=num_epochs, shuffle=False, capacity=capacity)
         csvnames_queue = tf.train.string_input_producer(self.csv_names, num_epochs=num_epochs, shuffle=False, capacity=capacity)
-        name, image = self._read_gif_format(gifnames_queue)
+        gn, image_g = self._read_gif_format(gifnames_queue)
+        en, image_e = self._read_gif_format(extnames_queue)
         _, fdb, cmd = self._read_csv_format(csvnames_queue)
+        image_g.set_shape((None, 240, 240, 3))
+        image_e.set_shape((None, 120, 120, 3))
 
-        image_batch, fdb_batch, cmd_batch, names = tf.train.batch(
-            [image, fdb, cmd, name],
+        batch = tf.train.batch(
+            [image_g, image_e, fdb, cmd],
             batch_size=batch_size,
             capacity=capacity,
             dynamic_pad=True,
             num_threads=self._NUM_THREAD
         )
-        # name_batch, image_batch = tf.train.shuffle_batch([name, image], batch_size, capacity, min_after_dequeue)
-        return image_batch, fdb_batch, cmd_batch, names
+        return batch
+
+    @property
+    def data_nums(self):
+        return self.data_num
 
     @staticmethod
     def set_logger(logger):
         if logger is None:
             import utils
-            logger = utils.set_logger()
+            logger = utils.set_logger()[0]
         DataLoader._logger = logger
 
     @staticmethod
     def start(sess):
-        if DataLoader._coord is not None: return
+        if DataLoader._coord is not None: #return
+            print('to close')
+            DataLoader.close()
         # Required to get the filename matching to run.
-        tf.local_variables_initializer().run()
+        tf.local_variables_initializer().run(session=sess)
+
         # Coordinate the loading of image files.
         DataLoader._coord   = tf.train.Coordinator()
         DataLoader._threads = tf.train.start_queue_runners(sess=sess, coord=DataLoader._coord, start=True)

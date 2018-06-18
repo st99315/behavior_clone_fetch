@@ -9,3 +9,7 @@ MUJOCO_LOG.TXT
 *.egg-info
 
 *.yaml
+
+*.zip
+*.tfrecords
+
