@@ -73,7 +73,6 @@ with tf.Session() as sess:
     run_log.info(data_save_path)
     saver    = DataSaver(data_save_path)
     tar_info = DataSaver(os.path.join(data_save_path, 'target'), info=True)
-    saver.open_tf_writer(name=args.start)
 
     # count executed task
     task_exe = np.array([[0, 0, 0, 0, 0]])
@@ -165,5 +164,4 @@ with tf.Session() as sess:
         task_exe = np.sum(task_exe, axis=0)[np.newaxis, :]
         run_log.info("total finish task {}".format(task_exe))
 
-    saver.close_tf_writer()
 

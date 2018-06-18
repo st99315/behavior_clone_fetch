@@ -58,7 +58,7 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
     im_loss_sum = 0.
     im_loss_avg = 0.
 
-    for i in range(1, np.ceil(datanums/cfg['batch_size']).astype(np.int32)):
+    for i in range(1, np.ceil(datanums/cfg['batch_size']).astype(np.int32)+1):
         try:
             if training:
                 _, total_im_loss, predict = sess.run([model.train_op, model.total_im_loss, model.batch_prediction], 
