@@ -15,11 +15,11 @@ from utils import print_all_var, recreate_dir
 from utils import set_logger, show_use_time
 
 
-_DATASET_DIR = './generation_data/train_data_diff_color_0526/'
-_TRAIN_DATA = _DATASET_DIR + 'train_data/object_0'
-_VALID_DATA = _DATASET_DIR + 'valid_data/object_0'
+_DATASET_DIR = './generation_data/train_data_diff_color_0615/'
+_TRAIN_DATA = _DATASET_DIR + 'train_data'
+_VALID_DATA = _DATASET_DIR + 'valid_data'
 
-_EPOCHS = 1000
+_EPOCHS = 100
 _PRINT_STEP = 100
 
 FLAGS = flags.FLAGS
@@ -58,22 +58,24 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
     im_loss_sum = 0.
     im_loss_avg = 0.
 
-    for i in range(1, datanums+1):
+    for i in range(1, np.ceil(datanums/cfg['batch_size']).astype(np.int32)+1):
         try:
             if training:
                 _, total_im_loss, predict = sess.run([model.train_op, model.total_im_loss, model.batch_prediction], 
                     feed_dict={is_training: training})
+                
             else:
                 total_im_loss, predict = sess.run([model.total_im_loss, model.batch_prediction],
                     feed_dict={is_training: training}) 
 
                 if i==1:
                     for line in predict:
-                        train_logger.debug('pred cmd: {}, obj: {}, grip: {}'.format(line[:4], line[4:7], line[7:]))
+                        train_logger.debug('predict cmd: {}, obj: {}, grip: {}'.format(line[:4], line[4:7], line[7:]))
 
         except tf.errors.OutOfRangeError:
-            train_logger.error('Batch out of range!')
-            exit()
+            train_logger.waring('Batch out of range!')
+            break
+            # exit()
         
         im_loss_sum += total_im_loss
         im_loss_avg = im_loss_sum / i
@@ -92,6 +94,9 @@ def train_all_batch(sess, model, epoch, datanums, training=True):
                 summary.value.add(tag="[Train] loss (every_100_gif)", simple_value=np.sqrt(im_loss_avg / 100.0))
                 summary_writer.add_summary(summary, all_gif_num)
 
+    train_logger.info("{} -> epoch: {:0>4d}, total iter: {:4d}". \
+            format(head_str, epoch, i))
+
     summary_writer.flush()
     show_use_time(time.time() - start_time, head_str + ' use time:', train_logger)
 
@@ -105,26 +110,24 @@ def valid_batch(*arg, **kwargs):
 logger.info('Start Logging')
 # Data Loader
 DataLoader.set_logger(build_logger)
-train_dlr = DataLoader(_TRAIN_DATA, img_size=cfg['image_height'])
-valid_dlr = DataLoader(_VALID_DATA, img_size=cfg['image_height'])
+train_dlr = DataLoader(_TRAIN_DATA)
+valid_dlr = DataLoader(_VALID_DATA)
 
 train_data = train_dlr.input_pipeline()
 valid_data = valid_dlr.input_pipeline()
+
 is_training = tf.placeholder(dtype=bool,shape=())
-gif, fdb, cmd, _ = tf.cond(is_training, lambda:(train_data), lambda:(valid_data))
+gif, fdb, cmd = tf.cond(is_training, lambda:(train_data), lambda:(valid_data))
 
 m = BehaviorClone(logger=build_logger)
 m.set_network_property(drop_out=FLAGS.drop_out)
 m.build_inputs_and_outputs(tf.squeeze(gif), tf.squeeze(fdb), tf.squeeze(cmd))
 m.build_train_op()
 
-build_logger.info('--------- After build graph, get_trainable_dic() ------------')
-get_trainable_dic()
-
 # limit memory
-# config = tf.ConfigProto()
-# config.gpu_options.allow_growth = True                   # allocate dynamically
-# config.gpu_options.per_process_gpu_memory_fraction = 0.8 # maximun alloc gpu50% of MEM
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True                   # allocate dynamically
+config.gpu_options.per_process_gpu_memory_fraction = 0.9 # maximun alloc gpu50% of MEM
 
 with tf.Session() as sess:
     start_ep = 0
@@ -132,7 +135,7 @@ with tf.Session() as sess:
     # -------restore------
     recreate_dir(FLAGS.log_dir)
     model_file = tf.train.latest_checkpoint(FLAGS.model_dir)
-    saver = tf.train.Saver(max_to_keep=5)
+    saver = tf.train.Saver(max_to_keep=2)
     if model_file is not None:
         build_logger.info('Use model_file = ' + str(model_file) + '!')
         saver.restore(sess, model_file)
@@ -150,13 +153,17 @@ with tf.Session() as sess:
         # sess.run(op, options=run_options)
         build_logger.info('Initialize all variables Finish')
 
-    # record start time
+    build_logger.info('--------- After build graph, get_trainable_dic() ------------')
+    get_trainable_dic()
+
+     # record start time
     train_start_time = time.time()
     
     try:
         DataLoader.start(sess)
 
-        for ep in range(start_ep, _EPOCHS):
+        end_ep = int((np.floor(start_ep / (_EPOCHS - 1)) + 1) * _EPOCHS)
+        for ep in range(start_ep, end_ep):
             train_logger.info('----- Train -----')
             train_avg_loss = train_all_batch(sess, m, ep, train_dlr.data_nums)
             train_logger.info('----- Valid -----')

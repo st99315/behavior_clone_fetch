@@ -11,4 +11,5 @@ MUJOCO_LOG.TXT
 *.yaml
 
 *.zip
-
+*.tfrecords
+*.ipynb

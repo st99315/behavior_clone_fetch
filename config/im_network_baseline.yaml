@@ -26,23 +26,15 @@ network:
         kernel_size: 3
         out_channel: 32
         stride: 2
-    im_conv_5: 
-        type: 'conv'
-        kernel_size: 3
-        out_channel: 32
-        stride: 2
-        spatial_softmax:
     im_fc_1:
         type: 'fc'
-        size: 256
+        size: 200
         bias_transform: 20
         bias_transform_name: 'context'
-        activation: 'leaky_relu'
     im_fc_2:
         type: 'fc'
         size: 128
-        activation: 'leaky_relu'
     im_prediction:
         type: 'fc'
         size: 10
-        activation: 
+
