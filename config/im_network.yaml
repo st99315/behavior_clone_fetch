@@ -34,7 +34,7 @@ network:
         spatial_softmax:
     im_fc_1:
         type: 'fc'
-        size: 256
+        size: 200
         bias_transform: 20
         bias_transform_name: 'context'
         activation: 'leaky_relu'
