@@ -47,14 +47,13 @@ class DataLoader:
         self.initial(directory, load_num)
 
     def initial(self, directory, load_num=None):
-        all_gifs, all_exts, all_csvs = self.get_all_filenames(directory, shuffle=True, size=load_num)
+        all_gifs, all_csvs = self.get_all_filenames(directory, shuffle=True, size=load_num)
         self.data_num = len(all_gifs)
 
         DataLoader._logger.info('All data: {}'.format(self.data_num))
         assert self.data_num is not 0, DataLoader._logger.error('No data loaded!')
         
         self.gif_names = tf.convert_to_tensor(all_gifs)
-        self.ext_names = tf.convert_to_tensor(all_exts)
         self.csv_names = tf.convert_to_tensor(all_csvs)
         self.set_parameter()
         self.get_mean(directory)
@@ -73,10 +72,9 @@ class DataLoader:
         exts, csvs = [], []
         for name in gifs:
             filename = name.rpartition('.')[0].rpartition('-')[0]
-            exts.append(filename+'-e.gif')
             csvs.append(filename+'.csv')
 
-        return gifs[:size], exts[:size], csvs[:size]
+        return gifs[:size], csvs[:size]
 
     def set_parameter(self, img_size=256, csv_cols=21):
         # self._GIF_SHAPE = (None, img_size, img_size, 3)
@@ -125,16 +123,13 @@ class DataLoader:
         capacity = min_after_dequeue + 3 * batch_size
 
         gifnames_queue = tf.train.string_input_producer(self.gif_names, num_epochs=num_epochs, shuffle=False, capacity=capacity)
-        extnames_queue = tf.train.string_input_producer(self.ext_names, num_epochs=num_epochs, shuffle=False, capacity=capacity)
         csvnames_queue = tf.train.string_input_producer(self.csv_names, num_epochs=num_epochs, shuffle=False, capacity=capacity)
         gn, image_g = self._read_gif_format(gifnames_queue)
-        en, image_e = self._read_gif_format(extnames_queue)
         _, fdb, cmd = self._read_csv_format(csvnames_queue)
         image_g.set_shape((None, 240, 240, 3))
-        image_e.set_shape((None, 120, 120, 3))
 
         batch = tf.train.batch(
-            [image_g, image_e, fdb, cmd],
+            [image_g, fdb, cmd],
             batch_size=batch_size,
             capacity=capacity,
             dynamic_pad=True,

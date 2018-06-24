@@ -117,7 +117,7 @@ train_data = train_dlr.input_pipeline()
 valid_data = valid_dlr.input_pipeline()
 
 is_training = tf.placeholder(dtype=bool,shape=())
-gif, ext, fdb, cmd = tf.cond(is_training, lambda:(train_data), lambda:(valid_data))
+gif, fdb, cmd = tf.cond(is_training, lambda:(train_data), lambda:(valid_data))
 
 m = BehaviorClone(logger=build_logger)
 m.set_network_property(drop_out=FLAGS.drop_out)

@@ -118,7 +118,7 @@ class FSM:
                 self.robot_state[-1] >= 0.05 or 
                 self.past_gs - self.robot_state[-1] > self._DIS_ERROR/2.0):     
                 return
-            self._done = True
+            #self._done = True
 
         self.state = self.next_state
         self._every_task.append(self._step)

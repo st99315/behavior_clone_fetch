@@ -26,7 +26,6 @@ network:
         kernel_size: 3
         out_channel: 32
         stride: 2
-        spatial_softmax:
     im_fc_1:
         type: 'fc'
         size: 200
