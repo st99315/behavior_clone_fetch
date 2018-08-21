@@ -122,11 +122,11 @@ m.build_inputs_and_outputs(tf.squeeze(gif), tf.squeeze(ext), tf.squeeze(fdb), tf
 m.build_train_op()
 
 # limit memory
-# config = tf.ConfigProto()
-# config.gpu_options.allow_growth = True                   # allocate dynamically
-# config.gpu_options.per_process_gpu_memory_fraction = 0.8 # maximun alloc gpu50% of MEM
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True                   # allocate dynamically
+config.gpu_options.per_process_gpu_memory_fraction = 0.9 # maximun alloc gpu50% of MEM
 
-with tf.Session() as sess:
+with tf.Session(config=config) as sess:
     start_ep = 0
 
     # -------restore------

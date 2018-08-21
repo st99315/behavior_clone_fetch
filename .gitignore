@@ -2,6 +2,7 @@
 
 *.gif
 *.csv
+*.png
 
 *.log
 MUJOCO_LOG.TXT
@@ -13,3 +14,5 @@ checkpoint
 *.meta
 
 backup
+
+*.ipynb

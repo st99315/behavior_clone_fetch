@@ -10,31 +10,31 @@ robot_feedback_num: 11
 network: 
     im_conv_1: 
         type: 'conv'
-        kernel_size: 3
+        kernel_size: 7
         out_channel: 64
         stride: 2
     im_conv_2: 
         type: 'conv'
-        kernel_size: 3
+        kernel_size: 7
         out_channel: 64
         stride: 2
     im_conv_3: 
         type: 'conv'
-        kernel_size: 3
+        kernel_size: 5
         out_channel: 32
-        stride: 2
+        stride: 1
     im_conv_4: 
         type: 'conv'
-        kernel_size: 3
+        kernel_size: 5
         out_channel: 32
-        stride: 2
+        stride: 1
         spatial_softmax:
 
 network_ext:
     im_conv_1: 
         type: 'conv'
         kernel_size: 3
-        out_channel: 64
+        out_channel: 16
         stride: 2
     im_conv_2: 
         type: 'conv'
@@ -44,18 +44,18 @@ network_ext:
     im_conv_3: 
         type: 'conv'
         kernel_size: 3
-        out_channel: 32
+        out_channel: 48
         stride: 2
     im_conv_4: 
         type: 'conv'
         kernel_size: 3
-        out_channel: 16
+        out_channel: 64
         stride: 2
 
 network_con:
     im_fc_1:
         type: 'fc'
-        size: 2048
+        size: 4096
         activation: 'leaky_relu'
     im_fc_2:
         type: 'fc'

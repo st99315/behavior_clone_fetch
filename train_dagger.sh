@@ -12,5 +12,4 @@ do
     echo ---------- dagger iter $i ----------
     python train_im_behavior_clone.py
     python dagger.py
-    python dagger_valid.py
 done
